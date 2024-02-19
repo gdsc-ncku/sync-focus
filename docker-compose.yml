@@ -1,0 +1,44 @@
+version: '1.0'
+
+services:
+  db:
+    image: postgres:15.1
+    expose:
+      - 5432
+    env_file:
+      - .env
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+
+  backend:
+    build: ./backend
+    # image: jasonbigcow/oauth2-fastapi
+    ports:
+      - 5001:5001
+    volumes:
+      - ./backend/:/usr/backend/
+    env_file:
+      - ./backend/production.env
+    command: python3 run.py --prod
+    restart: always
+    depends_on:
+      - db
+
+  nginx:
+    build: ./
+    # image: jasonbigcow/oauth2-vue3-nginx
+    ports:
+      - 80:8080
+    restart: always
+    depends_on:
+      - backend
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+
+volumes:
+  postgres_data:
+
+networks:
+  default: 
+    name: fastapi_vue_network
