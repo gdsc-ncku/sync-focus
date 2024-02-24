@@ -1,6 +1,7 @@
 from datetime import datetime
 from uuid import uuid4
 
+from sqlalchemy import DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.config import Base
@@ -19,7 +20,12 @@ class Heartbeat(Base):
     path: Mapped[str] = mapped_column(index=True)  # page path
     user_agent: Mapped[str] = mapped_column()  # user agent
 
-    time: Mapped[datetime] = mapped_column(index=True, nullable=True)
+    time: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), index=True, nullable=True
+    )
     hash: Mapped[str] = mapped_column(index=True, unique=True)
 
-    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+    )

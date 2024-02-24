@@ -1,23 +1,28 @@
 from datetime import datetime
 
-from sqlalchemy import DATE, VARCHAR, Column, DateTime
+from sqlalchemy import DateTime, func
+from sqlalchemy.orm import Mapped, mapped_column
 
 from database.config import Base
 
 
 # Create User class
-class UserModels(Base):
+class User(Base):
     __tablename__ = "users"
-    username = Column(VARCHAR, unique=True, primary_key=True)
-    password = Column(VARCHAR)
-    birthday = Column(DATE)
-    create_time = Column(DateTime, default=datetime.utcnow())
-    last_login = Column(DateTime, default=datetime.utcnow())
+    username: Mapped[str] = mapped_column(primary_key=True)
+    password: Mapped[str] = mapped_column()
+    api_key: Mapped[str] = mapped_column(unique=True, default=None)
+    is_admin: Mapped[bool] = mapped_column(default=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    last_login: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
 
-    def __init__(self, username: str, password: str, birthday: datetime):
+    def __init__(self, username: str, password: str):
         self.username = username
         self.password = password
-        self.birthday = birthday
 
     def __repr__(self) -> str:
-        return f"<UserModels(username={self.username}, password={self.password}, birthday={self.birthday})>"
+        return f"<UserModels(username={self.username}, password={self.password})>"
