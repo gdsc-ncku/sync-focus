@@ -1,8 +1,4 @@
-import os
-
-from dotenv import load_dotenv
-from databases import Database
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -19,5 +15,3 @@ async_session = sessionmaker(
 )
 
 Base = declarative_base()
-
-database = Database(settings.database_url)
