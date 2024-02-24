@@ -21,8 +21,3 @@ class UserModels(Base):
 
     def __repr__(self) -> str:
         return f"<UserModels(username={self.username}, password={self.password}, birthday={self.birthday})>"
-
-
-class TimeByUser(Base):
-    user: str
-    time: datetime

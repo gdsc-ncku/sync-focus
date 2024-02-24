@@ -3,11 +3,12 @@ from typing import Dict, List, Optional, TypeVar
 
 from sqlalchemy import func, or_
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session, aliased
+from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.orm.query import Query
 
 import models as models
+import schemas as schemas
 
 T = TypeVar("T")
 
@@ -85,33 +86,49 @@ class HeartbeatService:
         query = self.filtered_query(query, filter_map)
         return query.order_by(models.Heartbeat.time.desc()).first()
 
-    def get_first_by_users(self) -> List[models.TimeByUser]:
+    def get_first_by_users(self) -> List[schemas.TimeByUser]:
+        """
+        Retrieves the first heartbeat time for each user.
+
+        Returns:
+            A list of TimeByUser objects representing the first heartbeat time for each user.
+        """
         subquery = (
             self.db_session.query(
-                models.Heartbeat.user_id.label("user"),
+                models.Heartbeat.user_id.label("user_id"),
                 func.min(models.Heartbeat.time).label("time"),
             )
             .group_by(models.Heartbeat.user_id)
             .subquery()
         )
-        # Creating an aliased object to use in the outer query
-        first_time_alias = aliased(models.TimeByUser, subquery)
-        result = self.db_session.query(first_time_alias).all()
-        return result
+        result = self.db_session.query(
+            subquery.c.user_id.label("user_id"),
+            subquery.c.time.label("time"),
+        ).all()
 
-    def get_last_by_users(self) -> List[models.TimeByUser]:
+        return [schemas.TimeByUser(**row._asdict()) for row in result]
+
+    def get_last_by_users(self) -> List[schemas.TimeByUser]:
+        """
+        Retrieves the last heartbeat time for each user.
+
+        Returns:
+            A list of TimeByUser objects representing the last heartbeat time for each user.
+        """
         subquery = (
             self.db_session.query(
-                models.Heartbeat.user_id.label("user"),
+                models.Heartbeat.user_id.label("user_id"),
                 func.max(models.Heartbeat.time).label("time"),
             )
             .group_by(models.Heartbeat.user_id)
             .subquery()
         )
-        # Creating an aliased object to use in the outer query
-        last_time_alias = aliased(models.TimeByUser, subquery)
-        result = self.db_session.query(last_time_alias).all()
-        return result
+        result = self.db_session.query(
+            subquery.c.user_id.label("user_id"),
+            subquery.c.time.label("time"),
+        ).all()
+
+        return [schemas.TimeByUser(**row._asdict()) for row in result]
 
     def count(self, approximate: bool = False) -> int:
         # Approximate counting seems to be a feature of some databases, but not all.
@@ -151,6 +168,76 @@ class HeartbeatService:
             models.Heartbeat.user_id == user_id, models.Heartbeat.time <= time_threshold
         ).delete()
         self.db_session.commit()
+
+    def get_domain_stats(
+        self,
+        user_id: str,
+        from_time: datetime,
+        to_time: datetime,
+        limit: int,
+        offset: int,
+    ) -> List[schemas.DomainStat]:
+        """
+        Retrieves domain statistics for a given user within a specified time range.
+
+        Args:
+            user_id (str): The ID of the user.
+            from_time (datetime): The start time of the time range.
+            to_time (datetime): The end time of the time range.
+            limit (int): The maximum number of domain statistics to retrieve.
+            offset (int): The offset for pagination.
+
+        Returns:
+            List[schemas.DomainStat]: A list of domain statistics.
+
+        """
+        # Define the CTE for domains
+        domains_cte = (
+            self.db_session.query(
+                models.Heartbeat.domain.label("d"),
+                models.Heartbeat.user_id,
+                func.min(models.Heartbeat.time).label("first_time"),
+                func.max(models.Heartbeat.time).label("last_time"),
+                func.count().label("count"),
+            )
+            .filter(
+                models.Heartbeat.user_id == user_id,
+                models.Heartbeat.domain != "",
+                models.Heartbeat.time.between(from_time, to_time),
+            )
+            .group_by(models.Heartbeat.domain, models.Heartbeat.user_id)
+            .order_by(func.max(models.Heartbeat.time).desc())
+            .limit(limit)
+            .offset(offset)
+            .cte("domains")
+        )
+
+        # Main query that selects from the CTE
+        domain_stats_query = (
+            self.db_session.query(
+                domains_cte.c.user_id.label("user_id"),
+                domains_cte.c.d.label("domain"),
+                func.min(domains_cte.c.first_time).label("first_time"),
+                func.max(domains_cte.c.last_time).label("last_time"),
+                func.sum(domains_cte.c.count).label("count"),
+            )
+            .group_by(domains_cte.c.d, domains_cte.c.user_id)
+            .order_by(func.max(domains_cte.c.last_time).desc())
+        )
+
+        # Mapping the results to DomainStat instances
+        domain_stats = [
+            schemas.DomainStat(
+                user_id=row.user_id,
+                domain=row.domain,
+                first_time=row.first_time,
+                last_time=row.last_time,
+                count=row.count,
+            )
+            for row in domain_stats_query.all()
+        ]
+
+        return domain_stats
 
     def filtered_query(self, query: Query[T], filter_map: Dict[str, List[str]]):
         for col, vals in filter_map.items():
