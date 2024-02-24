@@ -1,11 +1,13 @@
-from fastapi import Depends, HTTPException
-from jose import jwt
 from typing import Annotated
 
+from fastapi import Depends, HTTPException
+from jose import jwt
+
 from database.config import async_session
-from crud.user import UserCRUD
-from .utils import verify_password, oauth2_scheme
+from service.user import UserService
 from setting.config import get_settings
+
+from .utils import oauth2_scheme, verify_password
 
 settings = get_settings()
 
@@ -13,7 +15,7 @@ settings = get_settings()
 async def validate_user(username: str, password: str):
     async with async_session() as session:
         async with session.begin():
-            db = UserCRUD(session)
+            db = UserService(session)
             user = await db.get_user_by_username(username=username)
             if not user:
                 return False
@@ -45,7 +47,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
 
     async with async_session() as session:
         async with session.begin():
-            db = UserCRUD(session)
+            db = UserService(session)
             user = await db.get_user_by_username(username=username)
             if user is None:
                 raise credentials_exception

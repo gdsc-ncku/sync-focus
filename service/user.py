@@ -1,15 +1,15 @@
 from datetime import datetime
-
-from sqlalchemy import select, update, delete
-from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 
+from sqlalchemy import delete, select, update
+from sqlalchemy.ext.asyncio import AsyncSession
+
+import schemas.user as user_schema
 from auth.utils import get_password_hash
 from models.user import UserModels
-import schemas.user as user_schema
 
 
-class UserCRUD:
+class UserService:
     db_session = None
 
     def __init__(self, db_session: AsyncSession = None):

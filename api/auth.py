@@ -1,14 +1,14 @@
 from datetime import datetime, timedelta, timezone
 
-from jose import jwt
-from fastapi import APIRouter, Depends, HTTPException, status, Cookie, Response, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
+from jose import jwt
 
 from auth.action import validate_user
 from auth.utils import create_access_token, create_refresh_token
-from crud.dependencies import get_user_crud
-from crud.user import UserCRUD
 from schemas.token import Token
+from service.dependencies import get_user_crud
+from service.user import UserService
 from setting.config import get_settings
 
 settings = get_settings()
@@ -19,7 +19,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 async def login(
     response: Response,
     form_data: OAuth2PasswordRequestForm = Depends(),
-    db: UserCRUD = Depends(get_user_crud),
+    db: UserService = Depends(get_user_crud),
 ):
     user = await validate_user(form_data.username, form_data.password)
     if not user:
@@ -58,7 +58,7 @@ async def login(
 async def refresh(
     request: Request,
     response: Response,
-    db: UserCRUD = Depends(get_user_crud),
+    db: UserService = Depends(get_user_crud),
 ):
     credentials_exception = HTTPException(
         status_code=401,

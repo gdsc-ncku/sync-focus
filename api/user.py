@@ -1,22 +1,23 @@
-from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
 
-from auth.action import get_current_user
-from crud.user import UserCRUD
-from crud.dependencies import get_user_crud
+from fastapi import APIRouter, Depends, HTTPException, status
+
 import schemas.user as user_schema
+from auth.action import get_current_user
+from service.dependencies import get_user_crud
+from service.user import UserService
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 
 @router.get("", response_model=List[user_schema.Base])
-async def get_users(db: UserCRUD = Depends(get_user_crud)):
+async def get_users(db: UserService = Depends(get_user_crud)):
     return await db.get_users()
 
 
 @router.post("")
 async def register(
-    new_user: user_schema.Register, db: UserCRUD = Depends(get_user_crud)
+    new_user: user_schema.Register, db: UserService = Depends(get_user_crud)
 ):
     db_user = await db.get_user_by_username(username=new_user.username)
     if db_user:
@@ -28,7 +29,7 @@ async def register(
 @router.delete("", deprecated=True)
 async def delete_user(
     current_user: user_schema.Base = Depends(get_current_user),
-    db: UserCRUD = Depends(get_user_crud),
+    db: UserService = Depends(get_user_crud),
 ):
     # return await db.delete_user(username=current_user.username)
     return "deprecated"
@@ -38,7 +39,7 @@ async def delete_user(
 async def update_password(
     request: user_schema.Password,
     current_user: user_schema.Base = Depends(get_current_user),
-    db: UserCRUD = Depends(get_user_crud),
+    db: UserService = Depends(get_user_crud),
 ):
     # return await db.update_password(  username=current_user.username , password=request.password )
     return "deprecated"
@@ -48,7 +49,7 @@ async def update_password(
 async def update_birthday(
     request: user_schema.Birthday,
     current_user: user_schema.Base = Depends(get_current_user),
-    db: UserCRUD = Depends(get_user_crud),
+    db: UserService = Depends(get_user_crud),
 ):
     # return await db.update_birthday( username=current_user.username ,birthday=request.birthday )
     return "deprecated"

@@ -1,16 +1,16 @@
-from typing import Generator
+from typing import AsyncGenerator
 
 from database.config import async_session
-from crud.user import UserCRUD
+from service.user import UserService
 
 
-async def get_db() -> Generator:
+async def get_db() -> AsyncGenerator:
     async with async_session() as session:
         async with session.begin():
             yield session
 
 
-async def get_user_crud() -> Generator:
+async def get_user_crud() -> AsyncGenerator:
     async with async_session() as session:
         async with session.begin():
-            yield UserCRUD(session)
+            yield UserService(session)
