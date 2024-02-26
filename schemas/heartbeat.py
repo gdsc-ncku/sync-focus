@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class DomainStat(BaseModel):
@@ -10,6 +10,8 @@ class DomainStat(BaseModel):
     first_time: Optional[datetime]
     last_time: Optional[datetime]
     count: Optional[int]
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class Heartbeat(BaseModel):
@@ -25,3 +27,5 @@ class Heartbeat(BaseModel):
     time: Optional[datetime]
     hash: Optional[str]
     created_at: Optional[datetime]
+
+    model_config = ConfigDict(from_attributes=True)

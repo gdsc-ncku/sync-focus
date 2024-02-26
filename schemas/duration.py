@@ -1,7 +1,9 @@
+import hashlib
+import json
 from datetime import datetime, timedelta
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from .heartbeat import Heartbeat
 
@@ -18,6 +20,15 @@ class Duration(BaseModel):
         exclude=True,
     )
 
+    group_hash: Optional[str] = Field(
+        default=None,
+        exclude=True,
+        title="Group Hash",
+        description="A hash of the object to group by",
+    )
+
+    model_config = ConfigDict(from_attributes=True)
+
     @classmethod
     def from_heartbeat(cls, heartbeat: Heartbeat) -> "Duration":
         return cls(
@@ -29,3 +40,13 @@ class Duration(BaseModel):
             entity=heartbeat.entity,
             heartbeat_num=1,
         )
+
+    def hashed(self):
+        obj_dict = self.__dict__.copy()
+        obj_dict.pop("heartbeat_num", None)
+        obj_dict.pop("group_hash", None)
+        obj_json = json.dumps(obj_dict, default=str)
+
+        hash_obj = hashlib.sha256(obj_json.encode())
+        self.group_hash = hash_obj.hexdigest()
+        return self
