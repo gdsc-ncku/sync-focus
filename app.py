@@ -3,7 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from otp import trace
 from api import user, auth, me
-from database.config import engine, database, Base
+
+from api import auth, me, user
+from bootstrap.db import Base, database, engine
 
 app = FastAPI()
 app.include_router(auth.router, prefix="/api")

@@ -3,40 +3,33 @@ version: '1.0'
 services:
   db:
     image: postgres:15.1
-    expose:
-      - 5432
     env_file:
-      - .env
-    restart: always
+      - path: example.env
+        required: false
+      - path: .env
+        required: false
+    # restart: always
+    environment:
+      POSTGRES_DB: sync-focus-db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     volumes:
-      - postgres_data:/var/lib/postgresql/data/
+      - ./.volume/postgresql:/var/lib/postgresql/data/
 
-  backend:
-    build: ./backend
-    ports:
-      - 5001:5001
-    volumes:
-      - ./backend/:/usr/backend/
-    env_file:
-      - ./backend/production.env
-    command: python3 run.py --prod
-    restart: always
-    depends_on:
-      - db
-
-  nginx:
-    build: ./
-    ports:
-      - 80:8080
-    restart: always
-    depends_on:
-      - backend
-    volumes:
-      - ./nginx:/etc/nginx/conf.d
-
-volumes:
-  postgres_data:
+  # backend:
+  #   build: ./backend
+  #   ports:
+  #     - 5001:5001
+  #   volumes:
+  #     - ./backend/:/usr/backend/
+  #   env_file:
+  #     - ./backend/production.env
+  #   command: python3 run.py --prod
+  #   restart: always
+  #   depends_on:
+  #     - db
 
 networks:
   default:
-    name: fastapi_vue_network
+    name: sync_focus_network
+

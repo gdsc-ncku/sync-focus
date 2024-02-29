@@ -1,6 +1,6 @@
 from typing import AsyncGenerator
 
-from database.config import async_session
+from bootstrap.db import async_session
 from service.user import UserService
 
 

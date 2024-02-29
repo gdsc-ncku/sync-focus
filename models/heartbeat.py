@@ -4,7 +4,7 @@ from uuid import uuid4
 from sqlalchemy import DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column
 
-from database.config import Base
+from bootstrap.db import Base
 
 
 class Heartbeat(Base):

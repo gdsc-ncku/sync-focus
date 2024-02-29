@@ -2,10 +2,10 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException
 from jose import jwt
-
-from database.config import async_session
-from service.user import UserService
 from setting.config import get_settings
+
+from bootstrap.db import async_session
+from service.user import UserService
 
 from .utils import oauth2_scheme, verify_password
 
