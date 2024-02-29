@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from otp import trace
 from api import user, auth, me
 from database.config import engine, database, Base
-
 
 app = FastAPI()
 app.include_router(auth.router, prefix="/api")
@@ -29,13 +29,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@trace("connect_database",test_attr="test_value")
+async def connect_db():
+    try:
+        await database.connect()
+    except Exception as e:
+        print(e)
 
 @app.on_event("startup")
 async def startup():
-    await database.connect()
+    init_tracer()
+    await connect_db()
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-
 
 @app.on_event("shutdown")
 async def shutdown():
