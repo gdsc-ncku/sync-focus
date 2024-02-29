@@ -1,14 +1,16 @@
 from datetime import datetime
+from uuid import uuid4
 
 from sqlalchemy import DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column
 
-from database.config import Base
+from .base import Base
 
 
 # Create User class
 class User(Base):
     __tablename__ = "users"
+    id: Mapped[str] = mapped_column(primary_key=True, index=True, default=uuid4().hex)
     username: Mapped[str] = mapped_column(primary_key=True)
     password: Mapped[str] = mapped_column()
     api_key: Mapped[str] = mapped_column(unique=True, default=None)
