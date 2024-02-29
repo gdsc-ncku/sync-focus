@@ -7,7 +7,7 @@ license = "MIT"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.11"
 python-dotenv = "1.0.0"
 uvicorn = "0.23.1"
 fastapi = "0.100.1"
@@ -19,6 +19,7 @@ bcrypt = "4.0.1"
 passlib = "1.7.4"
 python-jose = "3.3.0"
 ruff = "^0.1.5"
+pydantic-settings = "^2.2.1"
 
 
 [build-system]
