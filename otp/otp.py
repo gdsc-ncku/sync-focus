@@ -8,6 +8,10 @@ def trace(span_name, **attrs):
             with tracer.start_as_current_span(span_name) as decorated_span:
                 for key, value in attrs.items():
                     decorated_span.set_attribute(key, str(value))
-                return f(*args, **kwargs)
+                try:                      
+                    return f(*args, **kwargs)
+                except Exception as err:
+                    decorated_span.set_status(opentelemetry.trace.status.Status(opentelemetry.trace.status.StatusCode.ERROR, str(err)))
+                    raise err
         return wrapper
     return decorator
