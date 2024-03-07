@@ -7,7 +7,6 @@ from .base import Base
 from .user import User
 
 
-# Create Setting class
 class Setting(Base):
     __tablename__ = "settings"
     id: Mapped[str] = mapped_column(primary_key=True, index=True, default=uuid4().hex)

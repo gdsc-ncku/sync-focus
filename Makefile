@@ -9,3 +9,6 @@ endif
 
 run:
 	poetry run uvicorn app:app --reload
+
+setup-database:
+	sudo docker compose up db
