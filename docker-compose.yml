@@ -9,6 +9,8 @@ services:
       - path: .env
         required: false
     # restart: always
+    ports:
+      - 5432:5432
     environment:
       POSTGRES_DB: sync-focus-db
       POSTGRES_USER: postgres

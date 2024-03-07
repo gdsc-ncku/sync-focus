@@ -66,6 +66,7 @@ wrapt = "1.16.0"
 zipp = "3.17.0"
 pydantic-settings = "^2.2.1"
 alembic = "^1.13.1"
+psycopg2-binary = "^2.9.9"
 
 
 [build-system]

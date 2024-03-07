@@ -1,20 +1,17 @@
 from datetime import datetime
-from typing import TYPE_CHECKING
 from uuid import uuid4
 
 from sqlalchemy import DateTime, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column
 
-from bootstrap.db import Base
-
-if TYPE_CHECKING:
-    from .user import User
+from .base import Base
+from .user import User
 
 
 class Heartbeat(Base):
     __tablename__ = "heartbeats"
     id: Mapped[str] = mapped_column(primary_key=True, index=True, default=uuid4().hex)
-    user_id: Mapped[str] = mapped_column(ForeignKey(User.id))
+    user_id: Mapped[str] = mapped_column(ForeignKey(User.id), unique=True)
     entity: Mapped[str] = mapped_column(index=True)
     type: Mapped[str] = mapped_column(index=True)
     category: Mapped[str] = mapped_column(index=True)

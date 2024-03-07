@@ -3,7 +3,7 @@ from functools import lru_cache
 from pydantic import Field  # noqa: F401
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from bootstrap.token import AccessTokenSettings, RefreshTokenSettings
+from .token import AccessTokenSettings, RefreshTokenSettings
 
 from .base import base_model_config
 from .db import SQLAlchmeySettings
@@ -11,12 +11,12 @@ from .db import SQLAlchmeySettings
 
 class Settings(BaseSettings):
     access_token: AccessTokenSettings = AccessTokenSettings(
-        _env_prefix="ACCESS_TOKEN__"
+        _env_prefix="ACCESS_TOKEN_"
     )
     refresh_token: RefreshTokenSettings = RefreshTokenSettings(
-        _env_prefix="REFRESH_TOKEN__"
+        _env_prefix="REFRESH_TOKEN_"
     )
-    db: SQLAlchmeySettings = SQLAlchmeySettings(_env_prefix="DB__")
+    db: SQLAlchmeySettings = SQLAlchmeySettings(_env_prefix="SQLALCHEMY_")
 
     model_config: SettingsConfigDict = base_model_config
 
@@ -24,3 +24,6 @@ class Settings(BaseSettings):
 @lru_cache()
 def get_settings():
     return Settings()
+
+
+setting = get_settings()

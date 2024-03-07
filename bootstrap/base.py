@@ -4,6 +4,9 @@ base_model_config: SettingsConfigDict = SettingsConfigDict(
     env_file=(
         "example.env",
         ".env",
+        "local.env",
+        "stage.env",
+        "prod.env",
     ),
     env_file_encoding="utf-8",
     extra="ignore",

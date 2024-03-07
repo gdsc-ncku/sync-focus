@@ -35,6 +35,18 @@ demo 範例
 
 - [notion](https://www.notion.so/invite/67d9145b86eb7dcbd5a197547d617e4693a8ab16)
 
+## Development
+
+```bash
+poetry install
+poetry shell
+cp .env.example .env
+docker compose up -d
+make revision MESSAGE=init
+make migrate
+make run # run server
+```
+
 ## Branch/Commit Type
 
 - feat: 新增/修改功能 (feature)。

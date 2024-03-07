@@ -5,14 +5,16 @@ from .base import base_model_config
 
 
 class AccessTokenSettings(BaseSettings):
-    SECRET: str = Field(
+    secret: str = Field(
         default="123",
         alias="SECRET",
     )
-    ALGORITHM: str = Field(
+    algorithm: str = Field(
+        alias="ALGORITHM",
         default="HS256",
     )
-    EXPIRE_MINUTES: int = Field(
+    expire_minutes: int = Field(
+        alias="EXPIRE_MINUTES",
         default=60,
     )
 
@@ -20,13 +22,16 @@ class AccessTokenSettings(BaseSettings):
 
 
 class RefreshTokenSettings(BaseSettings):
-    SECRET: str = Field(
+    secret: str = Field(
+        alias="SECRET",
         default="123",
     )
-    ALGORITHM: str = Field(
+    algorithm: str = Field(
+        alias="ALGORITHM",
         default="HS256",
     )
-    EXPIRE_MINUTES: int = Field(
+    expire_minutes: int = Field(
+        alias="EXPIRE_MINUTES",
         default=60 * 24 * 7 * 4,
     )
 

@@ -1,36 +1,71 @@
-import json
+import time
 
-from bootstrap.setting import get_settings
+from fastapi import FastAPI, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.requests import Request
+from fastapi.responses import JSONResponse, RedirectResponse
 
-if __name__ == "__main__":
-    # parser = argparse.ArgumentParser(description="Run the server in different modes.")
+from exception.exception import BaseAPIException
 
-    # app_mode = parser.add_argument_group(
-    #     title="App Mode", description="Run the server in different modes."
-    # )
-    # app_mode.add_argument(
-    #     "--prod", action="store_true", help="Run the server in production mode."
-    # )
-    # app_mode.add_argument(
-    #     "--dev", action="store_true", help="Run the server in development mode."
-    # )
+app = FastAPI()
 
-    # args = parser.parse_args()
-    # print("args", args.__dict__)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-    # if args.prod:
-    #     # for production mode
-    #     # the secret key is set in the environment variable
-    #     pass
-    # else:
-    #     # check out setting/config.py for `ENV_PREFIX` use case
-    #     load_dotenv(".env")
 
-    print(json.dumps(get_settings().dict(), indent=4))
+@app.exception_handler(BaseAPIException)
+async def http_exception_handler(request: Request, exception: BaseAPIException):
+    return JSONResponse(
+        status_code=exception.status_code,
+        content={
+            "message": exception.message,
+            "detail": exception.detail,
+            "error_code": exception.error_code,
+        },
+    )
 
-    # uvicorn.run(
-    #     "app:app",
-    #     host="0.0.0.0",
-    #     port=int(os.getenv("PORT")),
-    #     reload=bool(os.getenv("RELOAD")),
-    # )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(
+    request: Request, exception: RequestValidationError
+):
+    return JSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content={
+            "message": "Validation Error",
+            "detail": exception.errors(),
+        },
+    )
+
+
+@app.middleware("https")
+async def add_process_time_header(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    response.headers["X-Process-Time"] = str(process_time)
+    return response
+
+
+@app.get("/", status_code=status.HTTP_307_TEMPORARY_REDIRECT, include_in_schema=False)
+async def root_endpoint():
+    return RedirectResponse(url="/redoc")
+
+
+# app.include_router(
+#     container_router,
+#     prefix="/containers",
+#     tags=["containers"],
+# )
+
+# app.include_router(
+#     tenant_router,
+#     prefix="/tenants",
+#     tags=["tenants"],
+# )

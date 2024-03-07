@@ -5,7 +5,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from bootstrap.base import base_model_config
+from .base import base_model_config
 
 if TYPE_CHECKING:
     from .setting import Settings
@@ -15,14 +15,8 @@ if TYPE_CHECKING:
 def NewSessionMaker(settings: "Settings"):
     engine = create_engine(
         f"{settings.db.engine}://{settings.db.db_username}:{settings.db.db_password}@{settings.db.db_host}/{settings.db.db_name}",
-        echo=settings.db.echo,
-        pool_size=settings.db.pool_size,
-        max_overflow=settings.db.max_overflow,
-        pool_timeout=settings.db.pool_timeout,
-        pool_recycle=settings.db.pool_recycle,
-        track_modifications=settings.db.track_modifications,
     )
-    return sessionmaker(
+    return engine, sessionmaker(
         autocommit=settings.db.session_autocommit,
         autoflush=settings.db.session_autoflush,
         bind=engine,
@@ -32,23 +26,23 @@ def NewSessionMaker(settings: "Settings"):
 class SQLAlchmeySettings(BaseSettings):
     engine: str = Field(
         default="postgresql",
-        alias="ENGINE",
+        alias="DATABASE_ENGINE",
     )
     db_name: str = Field(
         default="sync-focus-db",
-        alias="DBNAME",
+        alias="DATABASE_NAME",
     )
     db_username: str = Field(
         default="postgres",
-        alias="USERNAME",
+        alias="DATABASE_USERNAME",
     )
     db_password: str = Field(
         default="postgres",
-        alias="PASSWORD",
+        alias="DATABASE_PASSWORD",
     )
     db_host: str = Field(
         default="localhost",
-        alias="HOST",
+        alias="DATABASE_HOST",
     )
     echo: bool = Field(
         default=False,
@@ -84,3 +78,6 @@ class SQLAlchmeySettings(BaseSettings):
     )
 
     model_config: SettingsConfigDict = base_model_config
+
+    def get_sql_connection(self):
+        return f"{self.engine}://{self.db_username}:{self.db_password}@{self.db_host}/{self.db_name}"
