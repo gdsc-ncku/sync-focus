@@ -9,7 +9,6 @@ if TYPE_CHECKING:
     from .user import User
 
 
-# Create Setting class
 class Setting(Base):
     __tablename__ = "setting"
     user_id: Mapped[str] = mapped_column(ForeignKey(User.id), index=True)
