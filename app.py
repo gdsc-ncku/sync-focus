@@ -7,7 +7,6 @@ from api import auth, user
 from otp import trace, tracer
 
 app = FastAPI()
-FastAPIInstrumentor.instrument_app(app)
 
 app.include_router(auth.router, prefix="/api")
 app.include_router(user.router, prefix="/api")
@@ -33,7 +32,7 @@ app.add_middleware(
 )
 
 
-# @trace("connect_database", test_attr="test_value")
+@trace("connect_database", test_attr="test_value")
 # async def connect_db():
     # try:
     #     await deps.get_db()
@@ -54,3 +53,5 @@ async def startup():
 # async def shutdown():
 #     if database.is_connected:
 #         await database.disconnect()
+
+FastAPIInstrumentor.instrument_app(app)
