@@ -5,17 +5,17 @@
 ## Cross device stay-focus
 
 ### 跨裝置 (支援登入)
+
 - 1. 登入base: 寫一個網站讓使用者登入後產生token然後貼到extension的設定頁面
-    - google login
+  - google login
 
 ### 範例
 
 - [User behavior logging](https://github.com/susravan/User-behavior-logging)
-    - chrome extension and backend had finished
+  - chrome extension and backend had finished
 
 - [user behaviour js lib](https://github.com/TA3/web-user-behaviour)
-    - JS Library for user behaviour tracking from the browser, using mouse movements, clicks, scroll, and time on page.
-
+  - JS Library for user behaviour tracking from the browser, using mouse movements, clicks, scroll, and time on page.
 
 ## Log analyzer
 
@@ -25,7 +25,7 @@
 
 golang + postgres
 
-- https://github.com/muety/wakapi
+- <https://github.com/muety/wakapi>
 
 demo 範例
 
@@ -36,6 +36,8 @@ demo 範例
 - [notion](https://www.notion.so/invite/67d9145b86eb7dcbd5a197547d617e4693a8ab16)
 
 ## Development
+
+> python version: 3.11
 
 ```bash
 poetry install
