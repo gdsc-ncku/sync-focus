@@ -1,9 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+
 from api import auth, user
+from otp import trace, tracer
 
 app = FastAPI()
+FastAPIInstrumentor.instrument_app(app)
+
 app.include_router(auth.router, prefix="/api")
 app.include_router(user.router, prefix="/api")
 # app.include_router(me.router, prefix="/api")
@@ -30,18 +35,19 @@ app.add_middleware(
 
 # @trace("connect_database", test_attr="test_value")
 # async def connect_db():
-#     try:
-#         await deps.get_db()
-#     except Exception as e:
-#         print(e)
+    # try:
+    #     await deps.get_db()
+    # except Exception as e:
+    #     print(e)
 
 
-# @app.on_event("startup")
-# async def startup():
-#     init_tracer()
-#     await connect_db()
-#     async with engine.begin() as conn:
-#         await conn.run_sync(Base.metadata.create_all)
+@app.on_event("startup")
+async def startup():
+    with tracer.start_as_current_span("startup_span") as span:
+        print("startup")
+    # await connect_db()
+    # async with engine.begin() as conn:
+    #     await conn.run_sync(Base.metadata.create_all)
 
 
 # @app.on_event("shutdown")

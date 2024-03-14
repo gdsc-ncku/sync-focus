@@ -1,1 +1,1 @@
-from .otp import init_tracer, trace  # noqa: F401
+from .otp import trace,tracer  # noqa: F401
