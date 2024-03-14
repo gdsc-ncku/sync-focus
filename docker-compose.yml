@@ -26,6 +26,14 @@ services:
   #   depends_on:
   #     - db
 
+  # open http://localhost:16686
+  jaeger:
+    image: jaegertracing/all-in-one
+    ports:
+      - "16686:16686"
+      - "4318:4318"
+      - "4317:4317"
+
 networks:
   default:
     name: sync_focus_network
