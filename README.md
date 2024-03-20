@@ -1,6 +1,126 @@
-# Sync Mind
+# Sync Focus
 
 > StayFocus but support sync browsing data across different deivce and browser
+
+"Sync Mind" 項目是您提升工作效率、實現生活平衡的絕佳工具。通過創新的跨設備瀏覽數據同步功能和用戶登錄系統，它旨在為您的在線活動帶來前所未有的連貫性和便利性。配備了專為瀏覽器設計的追蹤庫和一個精巧的日志分析工具，這個項目讓您能夠洞察自己的網路使用習慣，優化時間管理。無論是開發者尋求提升生產力，還是日常用戶想要更有效地管理在線時間，"Sync Mind" 都是探索的寶庫。立即訪問[GitHub 上的 Sync Mind](https://github.com/gdsc-ncku/sync-focus)，開啟您的高效率之旅。
+
+## API
+
+登入目前暫時直接在前端生uuid, 然後每個請求都把 user uuid 帶進 query (如果 API endpoint 要求登入)
+
+### 1. Heartbeat
+
+#### 1-1. Send Heartbeat to Backend
+
+> require login
+
+- Request Method: POST
+- Request Route: /heartbeat
+
+- Request Body
+
+`application/json`
+
+|   Field    |   Type   |
+|:----------:|:--------:|
+|   domain   |   str    |
+|    path    |   str    |
+| user_agent |   str    |
+|    time    | datetime |
+|  browser   |   str    |
+
+### 2. Usage
+
+#### 2-1. User Usage by Time Range
+>
+> require login
+
+- Request Method: GET
+- Request Route: /usage
+
+- Request Query
+
+|    Field    |   Type    |
+|:-----------:|:---------:|
+| domain_list | List[str] |
+| start_time  | datetime  |
+|  end_time   | datetime  |
+
+- Response
+
+> return a mapping, key: 網站domain, value: 該使用者在查詢區間內的使用時間
+
+| Field  |      Type      | Example                           |
+|:------:|:--------------:| --------------------------------- |
+| usages | Dict[str, int] | {{"a.com": 1}, {"b.com": 2}, ...} |
+
+### 3. Summary
+
+> for dashboard
+
+#### 3-1. 列出使用者用過的domain
+>
+> require login
+
+- Request Method: GET
+- Request Route: /summaries/domain
+
+- Request Query
+
+| Field  | Type |
+|:------:|:----:|
+| offset | int  |
+| limit  | int  |
+
+- Response
+
+> return a list of domain, orderd by latest visit domain
+
+|  Field  |   Type    | Example            |
+|:-------:|:---------:| ------------------ |
+| domains | List[str] | ["a.com", "b.com"] |
+
+#### 3-2. 使用者的特定domain使用情況 - 同個domain的每個路徑的使用時間(unit: sec)
+>
+> require login
+
+- Request Method: GET
+- Request Route: /summaries/path
+
+- Request Query
+
+| Field  | Type |
+|:------:|:----:|
+| domain | str  |
+
+- Response
+
+> return a mapping, key: path, value: path的使用時間
+
+|  Field  |   Type    | Example            |
+|:-------:|:---------:| ------------------ |
+| usages | Dict[str, int] | {{"/meow": 1}, {"/cat": 2}, ...} |
+
+#### 3-3. 使用者的特定domain使用情況 - 同個domain在不同的 user-agent 上的使用分佈(including browser type, host os, ...)
+>
+> require login
+
+- Request Method: GET
+- Request Route: /summaries/path
+
+- Request Query
+
+| Field  | Type |
+|:------:|:----:|
+| domain | str  |
+
+- Response
+
+> return a mapping, key: user-agent, value: user-agent的使用時間
+
+|  Field  |   Type    | Example            |
+|:-------:|:---------:| ------------------ |
+| usages | Dict[str, int] | {{"Mozilla/5.0 (X11; Linux x86_64)": 1}, {"Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0)": 2}, ...} |
 
 ## Cross device stay-focus
 
