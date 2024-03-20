@@ -28,7 +28,7 @@ cython = "3.0.8"
 deprecated = "1.2.14"
 flask = "2.3.3"
 flask-sqlalchemy = "3.1.1"
-googleapis-common-protos = "1.62.0"
+googleapis-common-protos = "1.59.0"
 grpcio = "1.60.1"
 idna = "3.6"
 importlib-metadata = "6.11.0"
@@ -67,6 +67,7 @@ pydantic-settings = "^2.2.1"
 alembic = "^1.13.1"
 psycopg2-binary = "^2.9.9"
 opentelemetry-instrumentation-fastapi = "^0.44b0"
+opentelemetry-exporter-jaeger = "^1.21.0"
 
 
 [build-system]
