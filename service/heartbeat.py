@@ -1,6 +1,7 @@
 from datetime import datetime
-from typing import Dict, List, Optional, TypeVar
+from typing import Dict, List, TypeVar
 
+from fastapi import status
 from sqlalchemy import func, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -9,6 +10,7 @@ from sqlalchemy.orm.query import Query
 
 import models as models
 import schemas as schemas
+from exception.exception import ServiceException
 
 T = TypeVar("T")
 
@@ -19,41 +21,63 @@ class HeartbeatService:
     def __init__(self, db_session: Session):
         self.db_session = db_session
 
-    def get_all(self) -> List[models.Heartbeat]:
-        return self.db_session.query(models.Heartbeat).all()
+    def get_all(self) -> List[schemas.Heartbeat]:
+        heartbeats = self.db_session.query(models.Heartbeat).all()
+        return [schemas.Heartbeat.model_validate(heartbeat) for heartbeat in heartbeats]
 
-    def insert_batch(self, heartbeats: List[models.Heartbeat]):
-        for heartbeat in heartbeats:
+    def insert(self, heartbeat: models.Heartbeat) -> List[schemas.Heartbeat]:
+        return self.insert_batch([heartbeat])
+
+    def insert_batch(
+        self, heartbeats: List[models.Heartbeat]
+    ) -> List[schemas.Heartbeat]:
+        rets: List[schemas.Heartbeat] = [None] * len(heartbeats)
+        for i, heartbeat in enumerate(heartbeats):
             try:
                 self.db_session.add(heartbeat)
                 self.db_session.commit()
+                self.db_session.refresh(heartbeat)
+                rets[i] = schemas.Heartbeat.model_validate(heartbeat)
             except Exception as e:
                 self.db_session.rollback()
                 if not isinstance(e, IntegrityError):
-                    raise
+                    raise ServiceException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        message=f"Error inserting heartbeat {heartbeat} into the database: {e}",
+                    )
 
-    def get_latest_by_user(self, user_id: str) -> Optional[models.Heartbeat]:
-        return (
+        return rets
+
+    def get_latest_by_user(self, user_id: str) -> None | schemas.Heartbeat:
+        heartbeat = (
             self.db_session.query(models.Heartbeat)
             .filter_by(user_id=user_id)
             .order_by(models.Heartbeat.time.desc())
             .first()
         )
 
+        if not heartbeat:
+            return None
+        return schemas.Heartbeat.model_validate(heartbeat)
+
     def get_latest_by_origin_and_user(
         self, origin: str, user_id: str
-    ) -> Optional[models.Heartbeat]:
-        return (
+    ) -> None | schemas.Heartbeat:
+        heartbeat = (
             self.db_session.query(models.Heartbeat)
             .filter_by(user_id=user_id, origin=origin)
             .order_by(models.Heartbeat.time.desc())
             .first()
         )
 
+        if not heartbeat:
+            return None
+        return schemas.Heartbeat.model_validate(heartbeat)
+
     def get_all_within(
         self, from_time: datetime, to_time: datetime, user_id: str
-    ) -> List[models.Heartbeat]:
-        return (
+    ) -> List[schemas.Heartbeat]:
+        heartbeats = (
             self.db_session.query(models.Heartbeat)
             .filter(
                 models.Heartbeat.user_id == user_id,
@@ -64,27 +88,33 @@ class HeartbeatService:
             .all()
         )
 
+        return [schemas.Heartbeat.model_validate(heartbeat) for heartbeat in heartbeats]
+
     def get_all_within_by_filters(
         self,
         from_time: datetime,
         to_time: datetime,
         user_id: str,
         filter_map: Dict[str, List[str]] = {},
-    ) -> List[models.Heartbeat]:
+    ) -> List[schemas.Heartbeat]:
         query = self.db_session.query(models.Heartbeat).filter(
             models.Heartbeat.user_id == user_id,
             models.Heartbeat.time >= from_time,
             models.Heartbeat.time < to_time,
         )
         query = self.filtered_query(query, filter_map)
-        return query.order_by(models.Heartbeat.time.asc()).all()
+        heartbeats = query.order_by(models.Heartbeat.time.asc()).all()
+
+        return [schemas.Heartbeat.model_validate(heartbeat) for heartbeat in heartbeats]
 
     def get_latest_by_filters(
         self, user_id: str, filter_map: Dict[str, List[str]]
-    ) -> Optional[models.Heartbeat]:
+    ) -> schemas.Heartbeat | None:
         query = self.db_session.query(models.Heartbeat).filter_by(user_id=user_id)
         query = self.filtered_query(query, filter_map)
-        return query.order_by(models.Heartbeat.time.desc()).first()
+        heartbeat = query.order_by(models.Heartbeat.time.desc()).first()
+
+        return schemas.Heartbeat.model_validate(heartbeat) if heartbeat else None
 
     def get_first_by_users(self) -> List[schemas.TimeByUser]:
         """
