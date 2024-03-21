@@ -29,3 +29,27 @@ class Heartbeat(BaseModel):
     created_at: Optional[datetime]
 
     model_config = ConfigDict(from_attributes=True)
+
+    @classmethod
+    def from_request(cls, request: "HeartbeatCreateRequest") -> "Heartbeat":
+        return cls(
+            entity=request.entity,
+            type=request.type,
+            category=request.category,
+            browser=request.browser,
+            domain=request.domain,
+            path=request.path,
+            user_agent=request.user_agent,
+            time=request.time,
+        )
+
+
+class HeartbeatCreateRequest(BaseModel):
+    entity: Optional[str]
+    type: Optional[str]
+    category: Optional[str]
+    browser: Optional[str]
+    domain: Optional[str]
+    path: Optional[str]
+    user_agent: Optional[str]
+    time: Optional[datetime]
