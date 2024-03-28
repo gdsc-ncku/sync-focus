@@ -151,6 +151,10 @@ demo 範例
 
 ![image](https://hackmd.io/_uploads/BybcMvtO6.png)
 
+### Combing with GenAI
+
+- [Vertex AI Log Analyzer Implementation](https://github.com/NCKU-CSIE-Union/TSMC-Hackathon-2024-IT-Infra/blob/main/ai2/log_analyzer.py)
+
 ## Collaboration
 
 - [notion](https://www.notion.so/invite/67d9145b86eb7dcbd5a197547d617e4693a8ab16)
