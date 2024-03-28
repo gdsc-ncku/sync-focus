@@ -20,7 +20,6 @@ class CreateUserRequest(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-
 class Birthday(BaseModel):
     birthday: date
 
