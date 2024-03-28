@@ -9,11 +9,15 @@ class Setting(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-class UpdateSettingRequest:
+class UpdateSettingRequest(BaseModel):
     rev: int
     raw: str
 
-class CreateSettingRequest:
+    model_config = ConfigDict(from_attributes=True)
+
+class CreateSettingRequest(BaseModel):
     rev: int
     raw: str
+
+    model_config = ConfigDict(from_attributes=True)
 
