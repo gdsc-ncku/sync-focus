@@ -1,8 +1,8 @@
 # Sync Focus
 
-> StayFocus but support sync browsing data across different deivce and browser
+> StayFocus but support sync browsing data across different device and browser
 
-"Sync Mind" 項目是您提升工作效率、實現生活平衡的絕佳工具。通過創新的跨設備瀏覽數據同步功能和用戶登錄系統，它旨在為您的在線活動帶來前所未有的連貫性和便利性。配備了專為瀏覽器設計的追蹤庫和一個精巧的日志分析工具，這個項目讓您能夠洞察自己的網路使用習慣，優化時間管理。無論是開發者尋求提升生產力，還是日常用戶想要更有效地管理在線時間，"Sync Mind" 都是探索的寶庫。立即訪問[GitHub 上的 Sync Mind](https://github.com/gdsc-ncku/sync-focus)，開啟您的高效率之旅。
+Sync Mind: 通過創新的用戶登錄系統, 提供了跨設備瀏覽數據的同步功能, 旨在為你所有的在線活動帶來前所未有的連貫性和便利性。配備了專為瀏覽器設計的追蹤庫和精巧的日志分析工具, 並結合GenAI, 讓使用者能夠洞察自己的網路使用習慣，優化時間管理。無論是開發者尋求提升生產力, 還是日常用戶想要更有效地管理在線時間, Sync Mind都是你專屬的提升工作效率、實現生活平衡的絕佳工具。
 
 ## API
 
