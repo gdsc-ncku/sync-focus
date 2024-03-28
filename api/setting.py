@@ -16,14 +16,13 @@ def update_setting(new_setting: UpdateSettingRequest,
     user_id: str = Query(...),):
     return setting_service.update_setting(user_id,new_setting.rev,new_setting.raw)
 
-
 @router.post("/create")
 def create_setting(setting: CreateSettingRequest, 
     setting_service: SettingService = Depends(get_setting_service),
     user_id: str = Query(...),):
     return setting_service.create_setting(user_id,setting.raw)
 
-@router.get("",response_model=List[Setting])
+@router.get("",response_model=Setting)
 def get_setting(setting_service: SettingService = Depends(get_setting_service),
     user_id: str = Query(...),):
     return setting_service.get_by_user(user_id)

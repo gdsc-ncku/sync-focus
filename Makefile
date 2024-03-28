@@ -11,4 +11,4 @@ run:
 	OTEL_TRACES_EXPORTER=otlp_proto_http OTEL_EXPORTER_OTLP_ENDPOINT=127.0.0.1:4318 OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED=true uvicorn app:app --reload
 
 setup-database:
-	sudo docker compose up db
+	sudo docker compose --profile backend-dev up
