@@ -122,6 +122,39 @@ Sync Mind: 通過創新的用戶登錄系統, 提供了跨設備瀏覽數據的�
 |:-------:|:---------:| ------------------ |
 | usages | Dict[str, int] | {{"Mozilla/5.0 (X11; Linux x86_64)": 1}, {"Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0)": 2}, ...} |
 
+### 4. Synchronize Setting
+
+#### 4-1. 獲取設置
+
+> require login
+
+- Request Method: GET
+- Request Route: /setting
+
+- Response
+
+#### 4-2. 儲存設置
+
+> require login
+
+- Request Method: POST
+- Request Route: /setting/upload
+
+- Request Query
+
+- Response
+
+#### 4-2. 創建設置
+
+> require login
+
+- Request Method: POST
+- Request Route: /setting/create
+
+- Request Query
+
+- Response
+
 ## Cross device stay-focus
 
 ### 跨裝置 (支援登入)
