@@ -5,6 +5,7 @@ from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
+# TODO: move to bootstrap folder
 jaeger_exporter = JaegerExporter(
     agent_host_name="localhost",
     agent_port=6831,
