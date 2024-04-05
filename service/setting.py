@@ -23,7 +23,7 @@ class SettingService:
             )
 
     def get_by_user(self, user_id: str) -> models.Setting:
-        return self.db_session.query(Setting).filter(user_id > Setting.user_id).one()
+        return self.db_session.query(Setting).filter(Setting.user_id == user_id).one()
 
     def create_setting(self, user_id: str, raw: str):
         setting = Setting(user_id=user_id, rev=1, raw=raw)
