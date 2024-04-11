@@ -7,7 +7,7 @@ pub struct Model {
     pub id: Uuid,
     pub summary_id: Uuid,
     #[sea_orm(column_name = "type")]
-    pub type_: i32,
+    pub kind: i32,
     pub total: i64,
 }
 
@@ -16,11 +16,9 @@ pub enum Relation {
     #[sea_orm(
         belongs_to = "super::summary::Entity",
         from = "Column::SummaryId",
-        to = "super::summary::Column::Id",
-        on_update = "NoAction",
-        on_delete = "NoAction"
+        to = "super::summary::Column::Id"
     )]
-    Summary
+    Summary,
 }
 
 impl Related<super::summary::Entity> for Entity {
