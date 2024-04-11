@@ -14,7 +14,7 @@ class Duration(BaseModel):
     duration: Optional[timedelta] = None
     domain: Optional[str] = None
     browser: Optional[str] = None
-    entity: Optional[str] = None
+    entity: Optional[str] = None  # Summary Type, domain, path, etc.
     heartbeat_num: Optional[int] = Field(
         default=None,
         exclude=True,
