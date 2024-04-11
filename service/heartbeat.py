@@ -25,27 +25,30 @@ class HeartbeatService:
         heartbeats = self.db_session.query(models.Heartbeat).all()
         return [schemas.Heartbeat.model_validate(heartbeat) for heartbeat in heartbeats]
 
-    def insert(self, heartbeat: models.Heartbeat) -> List[schemas.Heartbeat]:
+    def insert(self, heartbeat: schemas.Heartbeat) -> List[schemas.Heartbeat]:
         return self.insert_batch([heartbeat])
 
     def insert_batch(
-        self, heartbeats: List[models.Heartbeat]
+        self, heartbeats: List[schemas.Heartbeat]
     ) -> List[schemas.Heartbeat]:
         rets: List[schemas.Heartbeat] = [None] * len(heartbeats)
+        heartbeat_dbs: List[models.Heartbeat] = [None] * len(heartbeats)
         for i, heartbeat in enumerate(heartbeats):
             try:
-                self.db_session.add(heartbeat)
-                self.db_session.commit()
-                self.db_session.refresh(heartbeat)
-                rets[i] = schemas.Heartbeat.model_validate(heartbeat)
+                heartbeat_db = models.Heartbeat(**heartbeat.model_dump())
+                self.db_session.add(heartbeat_db)
+                heartbeat_dbs[i] = heartbeat_db
             except Exception as e:
                 self.db_session.rollback()
                 if not isinstance(e, IntegrityError):
                     raise ServiceException(
                         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        message=f"Error inserting heartbeat {heartbeat} into the database: {e}",
+                        detail=f"Error inserting heartbeat {heartbeat} into the database: {e}",
+                        message="Error inserting heartbeat",
                     )
-
+        self.db_session.commit()
+        for i, heartbeat_db in enumerate(heartbeat_dbs):
+            rets[i] = schemas.Heartbeat.model_validate(heartbeat_db)
         return rets
 
     def get_latest_by_user(self, user_id: str) -> None | schemas.Heartbeat:
