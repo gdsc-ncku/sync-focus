@@ -16,9 +16,9 @@ pub struct Model {
     pub domain: String,
     pub path: String,
     pub user_agent: String,
-    pub time: chrono::NaiveDateTime,
+    pub time: Time,
     pub hash: String,
-    pub created_at: chrono::NaiveDateTime,
+    pub created_at: Time,
 }
 
 #[derive(DerivePartialModel, FromQueryResult)]
