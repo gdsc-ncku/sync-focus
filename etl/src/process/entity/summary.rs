@@ -6,8 +6,8 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub id: Uuid,
     pub user_id: Uuid,
-    pub from_time: chrono::NaiveDateTime,
-    pub to_time: chrono::NaiveDateTime,
+    pub from_time: Time,
+    pub to_time: Time,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
