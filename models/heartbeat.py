@@ -1,5 +1,5 @@
 from datetime import datetime
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from sqlalchemy import DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column
@@ -9,7 +9,7 @@ from .base import Base
 
 class Heartbeat(Base):
     __tablename__ = "heartbeats"
-    id: Mapped[str] = mapped_column(primary_key=True, index=True, default=uuid4().hex)
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4())
     # user_id: Mapped[str] = mapped_column(ForeignKey(User.id), unique=True)
     user_id: Mapped[str] = mapped_column(index=True)
     entity: Mapped[str] = mapped_column(index=True)
@@ -24,7 +24,7 @@ class Heartbeat(Base):
     time: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), index=True, nullable=True
     )
-    hash: Mapped[str] = mapped_column(index=True, unique=True)
+    hash: Mapped[str] = mapped_column(index=True, unique=True, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

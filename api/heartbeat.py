@@ -15,7 +15,7 @@ router = APIRouter(prefix="/heartbeat", tags=["heartbeat"])
 )
 def heartbeat(
     heartbeat: HeartbeatCreateRequest = Body(..., description="The heartbeat"),
-    api_key: str = Query(None, description="API key"),
+    api_key: str = Query(..., description="API key"),
     heartbeat_service: HeartbeatService = Depends(get_heartbeat_service),
 ):
     heartbeat_obj = Heartbeat.from_request(heartbeat)

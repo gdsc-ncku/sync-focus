@@ -3,7 +3,7 @@ version: '3.0'
 services:
   db:
     image: postgres:16
-    profiles: [backend-dev, production]
+    # profiles: [backend-dev, production]
     restart: unless-stopped
     ports:
       - 5432:5432
@@ -14,24 +14,24 @@ services:
     volumes:
       - ./.volume/postgresql:/var/lib/postgresql/data/
 
-  backend:
-    build: .
-    profiles: [production]
-    restart: unless-stopped
-    ports:
-      - 5001:5001
-    volumes:
-      - ./backend/:/usr/backend/
-    # env_file:
-      # - ./backend/production.env
-    command: python3 run.py --prod
-    depends_on:
-      - db
+  # backend:
+  #   build: .
+  #   profiles: [production]
+  #   restart: unless-stopped
+  #   ports:
+  #     - 5001:5001
+  #   volumes:
+  #     - ./backend/:/usr/backend/
+  #   # env_file:
+  #     # - ./backend/production.env
+  #   command: python3 run.py --prod
+  #   depends_on:
+  #     - db
 
   # open http://localhost:16686
   jaeger:
     image: jaegertracing/all-in-one
-    profiles: [backend-dev, production]
+    # profiles: [backend-dev, production]
     restart: unless-stopped
     ports:
       - 5775:5775/udp
