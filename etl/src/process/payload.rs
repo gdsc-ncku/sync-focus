@@ -1,13 +1,13 @@
-use std::collections::{btree_map::IntoIter, BTreeMap};
-
+use futures::future::BoxFuture;
 use lapin::message::Delivery;
 use lockable::{AsyncLimit, LockableHashMap};
-use sea_orm::DatabaseConnection;
+use sea_orm::ActiveValue;
 use serde::{Deserialize, Serialize};
 use tokio_stream::StreamExt;
 use uuid::Uuid;
 
-use crate::{constant::*, error::Error};
+use super::{entity::summary, trie::Tree, Error};
+use crate::constant::*;
 
 /// Heartbeat is a struct that contains the pathline and time of a heartbeat
 ///
@@ -39,52 +39,48 @@ impl TryFrom<Delivery> for Heartbeats {
 
 /// Beatbuffer realises logic of batching heartbeats and uploading them to the database
 #[derive(Default)]
-pub struct Beatbuffer(BTreeMap<Time, String>);
+pub struct Beatbuffer {
+    start: Time,
+    end: Time,
+    tree: Tree,
+}
 
 impl From<Heartbeats> for Beatbuffer {
     fn from(value: Heartbeats) -> Self {
-        Self(
-            value
-                .list
-                .into_iter()
-                .map(|x| (x.time, x.pathline))
-                .collect(),
-        )
-    }
-}
-
-impl IntoIterator for Beatbuffer {
-    type Item = Heartbeat;
-
-    type IntoIter = std::iter::Map<IntoIter<Time, String>, fn((Time, String)) -> Heartbeat>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.0
-            .into_iter()
-            .map(|(time, pathline)| Heartbeat { pathline, time })
+        let now = chrono::offset::Local::now().fixed_offset();
+        let start = value.list.iter().map(|x| x.time).min().unwrap_or(now);
+        let end = value.list.iter().map(|x| x.time).min().unwrap_or(now);
+        Self {
+            start,
+            end,
+            tree: value.list.into_iter().map(|x| x.pathline).collect(),
+        }
     }
 }
 
 impl Beatbuffer {
     pub fn add(&mut self, beats: Heartbeats) {
-        self.0
-            .extend(beats.list.into_iter().map(|x| (x.time, x.pathline)));
+        self.tree.extend(beats.list.into_iter().map(|x| x.pathline));
     }
     pub fn is_full(&self) -> bool {
-        match self.0.is_empty() {
+        match self.tree.is_empty() {
             true => false,
             false => {
-                let start = self.0.last_key_value().unwrap().0.clone();
-                let end = self.0.first_key_value().unwrap().0.clone();
-                (self.0.len() >= BUFFER_MAX_LENGTH) || (end - start >= BUFFER_MAX_TIME)
+                (self.tree.len() >= BUFFER_MAX_LENGTH) || (self.end - self.start >= BUFFER_MAX_TIME)
             }
         }
     }
-    pub async fn upload(self, db: impl AsRef<DatabaseConnection> + Send + 'static) {
-        todo!()
+    pub(super) fn into_payload(self) -> (summary::ActiveModel, Tree) {
+        (
+            summary::ActiveModel {
+                from_time: ActiveValue::Set(self.start.naive_local().time()),
+                to_time: ActiveValue::Set(self.end.naive_local().time()),
+                ..Default::default()
+            },
+            self.tree,
+        )
     }
 }
-
 /// BeatBuffers is a struct that enable batching heartbeats and uploading them to the database
 #[derive(Default)]
 pub struct BeatBuffers(LockableHashMap<Uuid, Beatbuffer>);
@@ -114,13 +110,13 @@ impl BeatBuffers {
         }
     }
     /// force flush all the beatbuffer in the hashmap
-    pub async fn flush(&self, db: impl AsRef<DatabaseConnection> + Send + Clone + 'static) {
-        let mut join_set = tokio::task::JoinSet::new();
+    pub async fn flush(&self, f: impl Fn(Beatbuffer) -> BoxFuture<'static, ()>) {
+        let mut join_set = tokio::task::JoinSet::<()>::new();
 
         let mut iter = self.0.lock_all_entries().await;
         while let Some(mut entry) = iter.next().await {
             let beats = entry.remove().unwrap();
-            join_set.spawn(beats.upload(db.clone()));
+            join_set.spawn(f(beats));
         }
 
         while join_set.join_next().await.is_some() {}

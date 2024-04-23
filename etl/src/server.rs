@@ -2,8 +2,7 @@ use std::sync::atomic::AtomicUsize;
 use std::sync::Arc;
 
 use crate::constant::{RABBITMQ_QUEUE, RABBITMQ_URL, SQL_URL};
-use crate::error::Error;
-use crate::process::payload::heartbeat;
+use crate::process::*;
 use lapin::{options, types, Channel, Connection, ConnectionProperties};
 use sea_orm::{Database, DatabaseConnection};
 use std::sync::atomic::Ordering;
@@ -26,7 +25,7 @@ macro_rules! slient_err {
 pub struct Server {
     channel: Channel,
     pub db: Arc<DatabaseConnection>,
-    pub beatbuffer: heartbeat::BeatBuffers,
+    pub beatbuffer: BeatBuffers,
 }
 
 impl Server {
@@ -39,7 +38,7 @@ impl Server {
         Ok(Server {
             channel,
             db,
-            beatbuffer: heartbeat::BeatBuffers::default(),
+            beatbuffer: BeatBuffers::default(),
         })
     }
     async fn heartbeat(self: Arc<Self>) -> Result<(), Error> {
@@ -76,9 +75,9 @@ impl Server {
 
         Ok(())
     }
-    pub async fn process_heartbeats(&self, heartbeats: heartbeat::Heartbeats) -> Result<(), Error> {
+    pub async fn process_heartbeats(&self, heartbeats: Heartbeats) -> Result<(), Error> {
         if let Some(buffer) = self.beatbuffer.add(heartbeats).await {
-            buffer.upload(self.db.clone()).await;
+            buffer.upload(self.db.clone()).await?;
         }
         Ok(())
     }
