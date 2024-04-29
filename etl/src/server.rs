@@ -1,11 +1,12 @@
 use std::sync::atomic::AtomicUsize;
 use std::sync::Arc;
 
-use crate::constant::{RABBITMQ_QUEUE, RABBITMQ_URL, SQL_URL};
+use crate::constant::{BUFFER_MAX_TIME, RABBITMQ_QUEUE, RABBITMQ_URL, SQL_URL};
 use crate::process::*;
 use lapin::{options, types, Channel, Connection, ConnectionProperties};
 use sea_orm::{Database, DatabaseConnection};
 use std::sync::atomic::Ordering;
+use tokio::time;
 use tokio_stream::StreamExt;
 use tracing::*;
 
@@ -75,10 +76,21 @@ impl Server {
 
         Ok(())
     }
-    pub async fn process_heartbeats(&self, heartbeats: Heartbeats) -> Result<(), Error> {
+    pub async fn process_heartbeats(self: Arc<Self>, heartbeats: Heartbeats) -> Result<(), Error> {
+        let user_id = heartbeats.user_id;
         if let Some(buffer) = self.beatbuffer.add(heartbeats).await {
             buffer.upload(self.db.clone()).await?;
         }
+
+        tokio::spawn(async move {
+            time::sleep(BUFFER_MAX_TIME.to_std().unwrap()).await;
+            if let Some(buffer) = self.beatbuffer.get_full(user_id).await {
+                if let Err(err) = buffer.upload(self.db.clone()).await {
+                    tracing::warn!("Error uploading buffer: {:?}", err);
+                }
+            }
+        });
+
         Ok(())
     }
     pub async fn attach(self) -> Result<(), Error> {

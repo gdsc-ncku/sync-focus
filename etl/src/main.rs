@@ -1,7 +1,11 @@
+use server::Server;
+
 pub mod constant;
 pub mod process;
 pub mod server;
 
-fn main() {
-    println!("Hello, world!");
+#[tokio::main]
+async fn main() {
+    // FIXME: add logger
+    Server::new().await.unwrap().attach().await.unwrap();
 }

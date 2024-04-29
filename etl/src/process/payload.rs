@@ -24,7 +24,7 @@ pub struct Heartbeat {
 #[derive(Deserialize, Serialize)]
 pub struct Heartbeats {
     pub trace_id: u64,
-    user_id: Uuid,
+    pub user_id: Uuid,
     user_agent: String,
     list: Vec<Heartbeat>,
 }
@@ -107,6 +107,17 @@ impl BeatBuffers {
         match entry.value().unwrap().is_full() {
             true => Some(entry.remove().unwrap()),
             false => None,
+        }
+    }
+    pub async fn get_full(&self, uuid: Uuid) -> Option<Beatbuffer> {
+        let mut entry = self
+            .0
+            .async_lock(uuid, AsyncLimit::no_limit())
+            .await
+            .unwrap();
+        match entry.value_mut() {
+            Some(beat) if beat.is_full() => entry.remove(),
+            _ => None,
         }
     }
     /// force flush all the beatbuffer in the hashmap
