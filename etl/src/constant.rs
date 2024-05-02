@@ -11,4 +11,6 @@ lazy_static::lazy_static! {
 pub static BUFFER_MAX_LENGTH: usize = 1000;
 pub static BUFFER_MAX_TIME: TimeDelta = TimeDelta::minutes(10);
 
+pub const HEARTBEAT_THRESHOLD: TimeDelta = TimeDelta::minutes(2);
+
 pub type Time = chrono::DateTime<chrono::FixedOffset>;

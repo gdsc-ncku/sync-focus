@@ -1,3 +1,4 @@
+use chrono::TimeDelta;
 use futures::future::BoxFuture;
 use itertools::Itertools;
 use lapin::message::Delivery;
@@ -78,15 +79,28 @@ impl Beatbuffer {
             }
         }
     }
-    pub(super) fn into_payloads(self) -> impl Iterator<Item = (summary::ActiveModel, Tree)> {
+    pub(super) fn into_payloads(
+        self,
+    ) -> impl Iterator<Item = (summary::ActiveModel, Tree<Vec<Time>>)> {
         let mut result = Vec::new();
         for (_, beats) in self
             .beats
             .into_iter()
-            .group_by(|x| (x.browser.clone(), x.category.clone(), x.entity.clone()))
+            .group_by(|x| {
+                (
+                    x.domain.clone(),
+                    x.browser.clone(),
+                    x.category.clone(),
+                    x.entity.clone(),
+                )
+            })
             .into_iter()
         {
-            let tree = Tree::from_iter(beats.map(|x| x.pathline));
+            let mut tree = Tree::default();
+            for beat in beats {
+                tree.insert(&beat.pathline, |x: &mut Vec<Time>| x.push(beat.time));
+            }
+
             let summary = summary::ActiveModel {
                 from_time: ActiveValue::Set(self.start.naive_local().time()),
                 to_time: ActiveValue::Set(self.end.naive_local().time()),
