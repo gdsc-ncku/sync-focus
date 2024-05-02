@@ -33,7 +33,6 @@ pub struct Heartbeat {
 pub struct Heartbeats {
     pub trace_id: u64,
     pub user_id: Uuid,
-    user_agent: String,
     list: Vec<Heartbeat>,
 }
 

@@ -95,7 +95,7 @@ impl Server {
     }
     pub async fn attach(self) -> Result<(), Error> {
         let self_ = Arc::new(self);
-        tokio::spawn(async move { slient_err!(self_.heartbeat().await) });
+        self_.heartbeat().await?;
         Ok(())
     }
 }
