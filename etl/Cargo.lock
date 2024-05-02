@@ -796,7 +796,9 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "futures",
+ "itertools 0.12.1",
  "lapin",
+ "lazy_static",
  "lockable",
  "opentelemetry",
  "opentelemetry-otlp",
