@@ -1,4 +1,5 @@
 use futures::future::BoxFuture;
+use itertools::Itertools;
 use lapin::message::Delivery;
 use lockable::{AsyncLimit, LockableHashMap};
 use sea_orm::ActiveValue;
@@ -14,8 +15,15 @@ use crate::constant::*;
 /// It's part of API spec
 #[derive(Deserialize, Serialize)]
 pub struct Heartbeat {
+    #[serde(rename = "path")]
     pathline: String,
+    entity: Option<String>,
+    category: Option<String>,
+    browser: Option<String>,
+    domain: Option<String>,
+    user_agent: Option<String>,
     time: Time,
+    created_at: Time,
 }
 
 /// Heartbeat is a struct that contains the pathline and time of a heartbeat
@@ -42,7 +50,7 @@ impl TryFrom<Delivery> for Heartbeats {
 pub struct Beatbuffer {
     start: Time,
     end: Time,
-    tree: Tree,
+    beats: Vec<Heartbeat>,
 }
 
 impl From<Heartbeats> for Beatbuffer {
@@ -53,32 +61,41 @@ impl From<Heartbeats> for Beatbuffer {
         Self {
             start,
             end,
-            tree: value.list.into_iter().map(|x| x.pathline).collect(),
+            beats: value.list,
         }
     }
 }
 
 impl Beatbuffer {
     pub fn add(&mut self, beats: Heartbeats) {
-        self.tree.extend(beats.list.into_iter().map(|x| x.pathline));
+        self.beats.extend(beats.list);
     }
     pub fn is_full(&self) -> bool {
-        match self.tree.is_empty() {
+        match self.beats.is_empty() {
             true => false,
             false => {
-                (self.tree.len() >= BUFFER_MAX_LENGTH) || (self.end - self.start >= BUFFER_MAX_TIME)
+                (self.beats.len() >= BUFFER_MAX_LENGTH)
+                    || (self.end - self.start >= BUFFER_MAX_TIME)
             }
         }
     }
-    pub(super) fn into_payload(self) -> (summary::ActiveModel, Tree) {
-        (
-            summary::ActiveModel {
+    pub(super) fn into_payloads(self) -> impl Iterator<Item = (summary::ActiveModel, Tree)> {
+        let mut result = Vec::new();
+        for (_, beats) in self
+            .beats
+            .into_iter()
+            .group_by(|x| (x.browser.clone(), x.category.clone(), x.entity.clone()))
+            .into_iter()
+        {
+            let tree = Tree::from_iter(beats.map(|x| x.pathline));
+            let summary = summary::ActiveModel {
                 from_time: ActiveValue::Set(self.start.naive_local().time()),
                 to_time: ActiveValue::Set(self.end.naive_local().time()),
                 ..Default::default()
-            },
-            self.tree,
-        )
+            };
+            result.push((summary, tree));
+        }
+        result.into_iter()
     }
 }
 /// BeatBuffers is a struct that enable batching heartbeats and uploading them to the database

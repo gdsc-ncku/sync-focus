@@ -18,17 +18,17 @@ impl Tree {
         }
         cur.leaf = true;
     }
-    pub fn is_empty(&self) -> bool {
-        self.root.occur == 0
-    }
-    pub fn len(&self) -> usize {
-        self.root.occur
-    }
-    pub fn extend(&mut self, other: impl Iterator<Item = String>) {
-        for prefix in other {
-            self.insert(&prefix);
-        }
-    }
+    // pub fn is_empty(&self) -> bool {
+    //     self.root.occur == 0
+    // }
+    // pub fn len(&self) -> usize {
+    //     self.root.occur
+    // }
+    // pub fn extend(&mut self, other: impl Iterator<Item = String>) {
+    //     for prefix in other {
+    //         self.insert(&prefix);
+    //     }
+    // }
     pub fn iter(&self) -> TreeIter {
         let mut stack = Vec::new();
 

@@ -34,7 +34,7 @@ impl Server {
         let conn = Connection::connect(&RABBITMQ_URL, ConnectionProperties::default()).await?;
 
         let channel = conn.create_channel().await?;
-        let db = Arc::new(Database::connect(SQL_URL).await?);
+        let db = Arc::new(Database::connect(&*SQL_URL).await?);
 
         Ok(Server {
             channel,
@@ -47,7 +47,7 @@ impl Server {
         let mut consumer = self
             .channel
             .basic_consume(
-                RABBITMQ_QUEUE,
+                &*RABBITMQ_QUEUE,
                 format!("consumer-{}", serial).as_str(),
                 options::BasicConsumeOptions::default(),
                 types::FieldTable::default(),
