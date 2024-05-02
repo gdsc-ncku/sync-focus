@@ -1,11 +1,12 @@
 use server::Server;
 
-pub mod constant;
-pub mod process;
-pub mod server;
+mod constant;
+mod logger;
+mod process;
+mod server;
 
 #[tokio::main]
 async fn main() {
-    // FIXME: add logger
+    logger::init();
     Server::new().await.unwrap().attach().await.unwrap();
 }
