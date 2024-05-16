@@ -21,6 +21,15 @@ services:
     volumes:
         - ~/.volume/rabbitmq/data/:/var/lib/rabbitmq/
         - ~/.volume/rabbitmq/log/:/var/log/rabbitmq
+  etl:
+    build: .
+    context: ./etl
+    restart: unless-stopped
+    volumes:
+      - ./etl/:/usr/etl/
+    depends_on:
+      - db
+      - rabbitmq
   # backend:
   #   build: .
   #   profiles: [production]

@@ -11,4 +11,5 @@ async fn main() {
     tracing::info!("Starting server...");
     Server::new().await.unwrap().attach().await.unwrap();
     tracing::info!("Exit");
+    // 1970-01-01 00:00:00 +00:00
 }

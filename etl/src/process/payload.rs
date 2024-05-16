@@ -14,7 +14,7 @@ use crate::constant::*;
 /// Heartbeat is a struct that contains the pathline and time of a heartbeat
 ///
 /// It's part of API spec
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct Heartbeat {
     #[serde(rename = "path")]
     pathline: String,
@@ -32,7 +32,7 @@ pub struct Heartbeat {
 /// It's part of API spec
 #[derive(Deserialize, Serialize)]
 pub struct Heartbeats {
-    pub trace_id: u64,
+    pub trace_id: Uuid,
     pub user_id: Uuid,
     list: Vec<Heartbeat>,
 }
@@ -46,7 +46,7 @@ impl TryFrom<Delivery> for Heartbeats {
 }
 
 /// Beatbuffer realises logic of batching heartbeats and uploading them to the database
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Beatbuffer {
     start: Time,
     end: Time,
@@ -79,36 +79,45 @@ impl Beatbuffer {
             }
         }
     }
-    pub(super) fn into_payloads(
-        self,
-    ) -> impl Iterator<Item = (summary::ActiveModel, Tree<Vec<Time>>)> {
-        let mut result = Vec::new();
-        for (_, beats) in self
-            .beats
+    pub(super) fn into_domains(self) -> impl Iterator<Item = (String, Vec<Time>)> {
+        self.beats
             .into_iter()
-            .group_by(|x| {
+            .group_by(|x| x.domain.clone())
+            .into_iter()
+            .map(|(domain, beats)| {
                 (
-                    x.domain.clone(),
-                    x.browser.clone(),
-                    x.category.clone(),
-                    x.entity.clone(),
+                    domain.unwrap_or_default(),
+                    beats.map(|x| x.time).collect::<Vec<_>>(),
                 )
             })
+            .collect::<Vec<_>>()
             .into_iter()
-        {
-            let mut tree = Tree::default();
-            for beat in beats {
-                tree.insert(&beat.pathline, |x: &mut Vec<Time>| x.push(beat.time));
-            }
-
-            let summary = summary::ActiveModel {
-                from_time: ActiveValue::Set(self.start.naive_local().time()),
-                to_time: ActiveValue::Set(self.end.naive_local().time()),
-                ..Default::default()
-            };
-            result.push((summary, tree));
+    }
+    pub(super) fn into_agents(self) -> impl Iterator<Item = (String, Vec<Time>)> {
+        self.beats
+            .into_iter()
+            .group_by(|x| x.user_agent.clone())
+            .into_iter()
+            .map(|(domain, beats)| {
+                (
+                    domain.unwrap_or_default(),
+                    beats.map(|x| x.time).collect::<Vec<_>>(),
+                )
+            })
+            .collect::<Vec<_>>()
+            .into_iter()
+    }
+    pub(super) fn into_payloads(self) -> (summary::ActiveModel, Tree<Vec<Time>>) {
+        let mut tree = Tree::default();
+        let summary = summary::ActiveModel {
+            from_time: ActiveValue::Set(self.start.naive_local().time()),
+            to_time: ActiveValue::Set(self.end.naive_local().time()),
+            ..Default::default()
+        };
+        for beats in self.beats {
+            tree.insert(&beats.pathline, |x: &mut Vec<Time>| x.push(beats.time));
         }
-        result.into_iter()
+        (summary, tree)
     }
 }
 /// BeatBuffers is a struct that enable batching heartbeats and uploading them to the database

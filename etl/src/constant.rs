@@ -1,7 +1,6 @@
 use chrono::TimeDelta;
 use std::env::var;
 
-// postgres://postgres:admin@localhost:5432/postgres
 lazy_static::lazy_static! {
     pub static ref SQL_URL: String = var("SQL_URL").unwrap_or("postgres://postgres:postgres@localhost:5432/postgres".to_string());
     pub static ref RABBITMQ_URL: String = var("RABBITMQ_URL").unwrap_or("amqp://guest:guest@localhost:5672/%2f".to_string());

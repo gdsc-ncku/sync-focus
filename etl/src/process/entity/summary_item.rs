@@ -7,10 +7,21 @@ pub struct Model {
     pub id: Uuid,
     pub summary_id: Uuid,
     #[sea_orm(column_name = "type")]
-    pub kind: i32,
+    pub kind: RecordKind,
     pub total: i64,
     #[sea_orm(column_type = "Text")]
     pub key: String,
+}
+
+#[derive(Clone, Debug, PartialEq, EnumIter, DeriveActiveEnum, Eq)]
+#[sea_orm(rs_type = "i32", db_type = "Integer")]
+pub enum RecordKind {
+    #[sea_orm(num_value = 0)]
+    Domain,
+    #[sea_orm(num_value = 1)]
+    Path,
+    #[sea_orm(num_value = 2)]
+    UserAgent,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

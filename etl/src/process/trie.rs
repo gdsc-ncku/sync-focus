@@ -1,6 +1,6 @@
 //! prefix tree
 
-use std::{collections::BTreeMap, ops::Deref};
+use std::collections::BTreeMap;
 
 #[derive(Default)]
 pub struct Tree<V: Default> {
@@ -59,13 +59,13 @@ pub struct TreeIter<V: Default> {
 }
 
 impl<V: Default> Iterator for TreeIter<V> {
-    type Item = (V, String);
+    type Item = (String, V);
 
     fn next(&mut self) -> Option<Self::Item> {
         while let Some((node, c, depth)) = self.stack.pop() {
             self.prefix.truncate(depth);
             self.prefix.push(c);
-            let data = (node.data, self.prefix.clone());
+            let data = (self.prefix.clone(), node.data);
             for (i, child) in node.children.into_iter() {
                 self.stack.push((child, i, depth + 1));
             }
@@ -102,7 +102,7 @@ mod test {
         tree.insert("hello", |x| *x += 1);
         tree.insert("world", |x| *x += 1);
         assert_eq!(
-            [(1_i32, "world".to_string()), (1_i32, "hello".to_string())],
+            [("world".to_string(), 1_i32), ("hello".to_string(), 1_i32)],
             *tree.into_iter().collect::<Vec<_>>()
         );
     }
@@ -114,9 +114,9 @@ mod test {
         tree.insert("helloaaabb", |x| *x += 1);
         assert_eq!(
             [
-                (3_i32, "hello".to_string()),
-                (2_i32, "helloaaa".to_string()),
-                (1_i32, "helloaaabb".to_string())
+                ("hello".to_string(), 3_i32),
+                ("helloaaa".to_string(), 2_i32),
+                ("helloaaabb".to_string(), 1_i32)
             ],
             *tree.into_iter().collect::<Vec<_>>()
         );
