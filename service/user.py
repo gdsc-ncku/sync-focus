@@ -49,3 +49,9 @@ class UserService:
 
     def get_password_hash(password: str):
         return hashlib.sha256(password).hexdigest()
+
+    def get_user_by_api_key(self, api_key: str):
+        stmt = select(models.User).where(models.User.api_key == api_key)
+        result = self.db_session.execute(stmt)
+        user = result.scalars().first()
+        return user

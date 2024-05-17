@@ -1,10 +1,11 @@
 from typing import List
 
-from fastapi import APIRouter, Body, Depends, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 
-from api.services import get_heartbeat_service
+from api.services import get_heartbeat_service, get_user_service
 from schemas.heartbeat import Heartbeat, HeartbeatCreateRequest
 from service.heartbeat import HeartbeatService
+from service.user import UserService
 
 router = APIRouter(prefix="/heartbeat", tags=["heartbeat"])
 
@@ -15,11 +16,20 @@ router = APIRouter(prefix="/heartbeat", tags=["heartbeat"])
 )
 def heartbeat(
     heartbeat: HeartbeatCreateRequest = Body(..., description="The heartbeat"),
-    api_key: str = Query(..., description="API key"),
+    api_key: str = Query(None, description="API key"),
     heartbeat_service: HeartbeatService = Depends(get_heartbeat_service),
+    user_service: UserService = Depends(get_user_service),
 ):
     heartbeat_obj = Heartbeat.from_request(heartbeat)
-    heartbeat_obj.user_id = api_key  # TODO: implement user authentication to get real user id through api_key, this is for testing
+    user_id: str = None
+    if api_key:
+        user = user_service.get_user_by_api_key(api_key)
+        if not user:
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid API key")
+        user_id = user.id
+    else:
+        user_id = "anonymous"
+    heartbeat_obj.user_id = user_id
     return heartbeat_service.insert(heartbeat_obj)
 
 
@@ -31,8 +41,17 @@ def heartbeat_batch(
     heartbeats: List[HeartbeatCreateRequest] = Body(..., description="The heartbeats"),
     api_key: str = Query(None, description="API key"),
     heartbeat_service: HeartbeatService = Depends(get_heartbeat_service),
-):
+    user_service: UserService = Depends(get_user_service),
+) -> List[Heartbeat]:
     heartbeat_objs = [Heartbeat.from_request(heartbeat) for heartbeat in heartbeats]
+    user_id: str = None
+    if api_key:
+        user = user_service.get_user_by_api_key(api_key)
+        if not user:
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid API key")
+        user_id = user.id
+    else:
+        user_id = "anonymous"
     for heartbeat_obj in heartbeat_objs:
-        heartbeat_obj.user_id = api_key  # TODO: implement user authentication to get real user id through api_key, this is for testing
+        heartbeat_obj.user_id = user_id
     return heartbeat_service.insert_batch(heartbeat_objs)
