@@ -3,16 +3,21 @@ from typing import List
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 
 from api.services import get_heartbeat_service, get_user_service
+from exception.exception import HTTPError
 from schemas.heartbeat import Heartbeat, HeartbeatCreateRequest
 from service.heartbeat import HeartbeatService
 from service.user import UserService
 
-router = APIRouter(prefix="/heartbeat", tags=["heartbeat"])
+router = APIRouter(prefix="/heartbeats", tags=["heartbeats"])
 
 
 @router.post(
     "/",
     description="Receive a heartbeat from the client(browser extension)",
+    responses={
+        status.HTTP_201_CREATED: {"model": Heartbeat},
+        status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
+    },
 )
 def heartbeat(
     heartbeat: HeartbeatCreateRequest = Body(..., description="The heartbeat"),
@@ -36,6 +41,10 @@ def heartbeat(
 @router.post(
     "/batch",
     description="Receive a batch of heartbeats from the client(browser extension)",
+    responses={
+        status.HTTP_201_CREATED: {"model": List[Heartbeat]},
+        status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
+    },
 )
 def heartbeat_batch(
     heartbeats: List[HeartbeatCreateRequest] = Body(..., description="The heartbeats"),

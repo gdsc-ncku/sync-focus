@@ -1,3 +1,4 @@
+from pydantic import BaseModel
 from starlette.exceptions import HTTPException
 
 
@@ -27,3 +28,12 @@ class ServiceException(HTTPException):
         super().__init__(status_code=status_code, detail=detail)
         self.message = message
         self.error_code = error_code
+
+
+class HTTPError(BaseModel):
+    detail: str
+
+    class Config:
+        schema_extra = {
+            "example": {"detail": "HTTPException raised."},
+        }
