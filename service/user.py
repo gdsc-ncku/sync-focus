@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from typing import List
 from uuid import UUID
 
+from fastapi import HTTPException, status
 from jose import jwt
 from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session
@@ -75,6 +76,17 @@ class UserService:
         result = self.db_session.execute(stmt)
         user = result.scalars().first()
         return user
+
+    def get_user_api_key(self, user_id: str):
+        stmt = select(models.User.api_key).where(models.User.id == user_id)
+        result = self.db_session.execute(stmt)
+        api_key = result.scalars().first()
+        if api_key is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="API key not found",
+            )
+        return schemas.UserAPIKey(api_key=api_key)
 
     def create_access_token(self, data: dict):
         to_encode = data.copy()

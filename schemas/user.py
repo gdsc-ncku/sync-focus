@@ -14,6 +14,10 @@ class User(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class UserAPIKey(BaseModel):
+    api_key: str
+
+
 class CreateUserRequest(BaseModel):
     username: Optional[str]
     password: str

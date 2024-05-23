@@ -10,10 +10,15 @@ from bootstrap.setting import setting
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-cookie_schema = APIKeyCookie(name="access_token")
+cookie_schema = APIKeyCookie(name="access_token", auto_error=False)
 
 
 def required_login(token: Annotated[str, Depends(cookie_schema)]) -> str:
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+        )
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",

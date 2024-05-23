@@ -30,16 +30,16 @@ def login(
         "access_token",
         access_token,
         httponly=True,
-        samesite="strict",
-        secure=False,
+        samesite="none",
+        secure=True,
     )
 
     response.set_cookie(
         "refresh_token",
         refresh_token,
         httponly=True,
-        samesite="strict",
-        secure=False,
+        samesite="none",
+        secure=True,
     )
 
     return Token(

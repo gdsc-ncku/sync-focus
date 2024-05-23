@@ -3,7 +3,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from api.security import required_login
-from schemas.user import CreateUserRequest, User
+from schemas.user import CreateUserRequest, User, UserAPIKey
 from service.user import UserService
 
 # from auth.action import get_current_user
@@ -23,6 +23,14 @@ def get_user_profile(
     auth_user_id: str = Depends(required_login),
 ):
     return user_service.get_user_by_id(auth_user_id)
+
+
+@router.post("/api_key", response_model=UserAPIKey)
+def get_user_api_key(
+    user_service: UserService = Depends(get_user_service),
+    auth_user_id: str = Depends(required_login),
+):
+    return user_service.get_user_api_key(auth_user_id)
 
 
 @router.post("")

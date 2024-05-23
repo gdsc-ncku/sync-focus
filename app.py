@@ -13,9 +13,7 @@ app.include_router(heartbeat.router, prefix="/api")
 app.include_router(setting.router, prefix="/api")
 # app.include_router(me.router, prefix="/api")
 
-origins = [
-    "*",
-]
+origins = ["http://localhost", "chrome-extension://mohpaadocnhngkhlkcjimmiaidpbebbj"]
 
 methods = [
     "DELETE",
