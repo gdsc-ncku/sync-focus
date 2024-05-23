@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import APIKeyCookie
-from jose import jwt
+from jose import ExpiredSignatureError, jwt
 
 # from service.utils import create_access_token, create_refresh_token
 from bootstrap.setting import setting
@@ -18,7 +18,13 @@ def required_login(token: Annotated[str, Depends(cookie_schema)]) -> str:
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
     )
-    payload = jwt.decode(token, setting.access_token.secret, algorithms=["HS256"])
+    try:
+        payload = jwt.decode(token, setting.access_token.secret, algorithms=["HS256"])
+    except ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Login expired, please login again",
+        )
 
     if (payload is None) or ("user_id" not in payload):
         raise credentials_exception
