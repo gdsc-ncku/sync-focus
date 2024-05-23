@@ -204,6 +204,7 @@ docker compose up -d
 make revision MESSAGE=init
 make migrate
 make run # run server
+make dev # run server without otlp
 ```
 
 ## Branch/Commit Type
