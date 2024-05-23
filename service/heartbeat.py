@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Dict, List, TypeVar
 
 from fastapi import status
-from sqlalchemy import func, or_
+from sqlalchemy import distinct, func, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import InstrumentedAttribute
@@ -176,11 +176,9 @@ class HeartbeatService:
 
     # def get_entity_set_by_user(self, entity_type: int, user_id: str) -> List[str]:
     #     # Assuming GetEntityColumn is a function that returns the name of the column to filter on based on the entity type
-    #     entity_column = get_entity_column(
-    #         entity_type
-    #     )  # You need to implement this function
+    #     entity_column = "id"  # You need to implement this function
     #     results = (
-    #         self.db_session.query(distinct(getattr(models.Heartbeat, entity_column)))
+    #         self.db_session.query(distinct(models.Heartbeat.id))
     #         .filter_by(user_id=user_id)
     #         .all()
     #     )
