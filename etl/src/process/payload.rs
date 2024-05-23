@@ -1,4 +1,6 @@
+use chrono::TimeDelta;
 use futures::future::BoxFuture;
+use itertools::Itertools;
 use lapin::message::Delivery;
 use lockable::{AsyncLimit, LockableHashMap};
 use sea_orm::ActiveValue;
@@ -12,10 +14,17 @@ use crate::constant::*;
 /// Heartbeat is a struct that contains the pathline and time of a heartbeat
 ///
 /// It's part of API spec
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct Heartbeat {
+    #[serde(rename = "path")]
     pathline: String,
+    entity: Option<String>,
+    category: Option<String>,
+    browser: Option<String>,
+    domain: Option<String>,
+    user_agent: Option<String>,
     time: Time,
+    created_at: Time,
 }
 
 /// Heartbeat is a struct that contains the pathline and time of a heartbeat
@@ -23,9 +32,8 @@ pub struct Heartbeat {
 /// It's part of API spec
 #[derive(Deserialize, Serialize)]
 pub struct Heartbeats {
-    pub trace_id: u64,
-    user_id: Uuid,
-    user_agent: String,
+    pub trace_id: Uuid,
+    pub user_id: Uuid,
     list: Vec<Heartbeat>,
 }
 
@@ -38,11 +46,11 @@ impl TryFrom<Delivery> for Heartbeats {
 }
 
 /// Beatbuffer realises logic of batching heartbeats and uploading them to the database
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Beatbuffer {
     start: Time,
     end: Time,
-    tree: Tree,
+    beats: Vec<Heartbeat>,
 }
 
 impl From<Heartbeats> for Beatbuffer {
@@ -53,32 +61,63 @@ impl From<Heartbeats> for Beatbuffer {
         Self {
             start,
             end,
-            tree: value.list.into_iter().map(|x| x.pathline).collect(),
+            beats: value.list,
         }
     }
 }
 
 impl Beatbuffer {
     pub fn add(&mut self, beats: Heartbeats) {
-        self.tree.extend(beats.list.into_iter().map(|x| x.pathline));
+        self.beats.extend(beats.list);
     }
     pub fn is_full(&self) -> bool {
-        match self.tree.is_empty() {
+        match self.beats.is_empty() {
             true => false,
             false => {
-                (self.tree.len() >= BUFFER_MAX_LENGTH) || (self.end - self.start >= BUFFER_MAX_TIME)
+                (self.beats.len() >= BUFFER_MAX_LENGTH)
+                    || (self.end - self.start >= BUFFER_MAX_TIME)
             }
         }
     }
-    pub(super) fn into_payload(self) -> (summary::ActiveModel, Tree) {
-        (
-            summary::ActiveModel {
-                from_time: ActiveValue::Set(self.start.naive_local().time()),
-                to_time: ActiveValue::Set(self.end.naive_local().time()),
-                ..Default::default()
-            },
-            self.tree,
-        )
+    pub(super) fn into_domains(self) -> impl Iterator<Item = (String, Vec<Time>)> {
+        self.beats
+            .into_iter()
+            .group_by(|x| x.domain.clone())
+            .into_iter()
+            .map(|(domain, beats)| {
+                (
+                    domain.unwrap_or_default(),
+                    beats.map(|x| x.time).collect::<Vec<_>>(),
+                )
+            })
+            .collect::<Vec<_>>()
+            .into_iter()
+    }
+    pub(super) fn into_agents(self) -> impl Iterator<Item = (String, Vec<Time>)> {
+        self.beats
+            .into_iter()
+            .group_by(|x| x.user_agent.clone())
+            .into_iter()
+            .map(|(domain, beats)| {
+                (
+                    domain.unwrap_or_default(),
+                    beats.map(|x| x.time).collect::<Vec<_>>(),
+                )
+            })
+            .collect::<Vec<_>>()
+            .into_iter()
+    }
+    pub(super) fn into_payloads(self) -> (summary::ActiveModel, Tree<Vec<Time>>) {
+        let mut tree = Tree::default();
+        let summary = summary::ActiveModel {
+            from_time: ActiveValue::Set(self.start.naive_local().time()),
+            to_time: ActiveValue::Set(self.end.naive_local().time()),
+            ..Default::default()
+        };
+        for beats in self.beats {
+            tree.insert(&beats.pathline, |x: &mut Vec<Time>| x.push(beats.time));
+        }
+        (summary, tree)
     }
 }
 /// BeatBuffers is a struct that enable batching heartbeats and uploading them to the database
@@ -107,6 +146,17 @@ impl BeatBuffers {
         match entry.value().unwrap().is_full() {
             true => Some(entry.remove().unwrap()),
             false => None,
+        }
+    }
+    pub async fn get_full(&self, uuid: Uuid) -> Option<Beatbuffer> {
+        let mut entry = self
+            .0
+            .async_lock(uuid, AsyncLimit::no_limit())
+            .await
+            .unwrap();
+        match entry.value_mut() {
+            Some(beat) if beat.is_full() => entry.remove(),
+            _ => None,
         }
     }
     /// force flush all the beatbuffer in the hashmap

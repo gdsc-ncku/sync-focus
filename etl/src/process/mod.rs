@@ -4,7 +4,6 @@ mod trie;
 mod upload;
 
 pub use payload::BeatBuffers;
-pub use payload::Beatbuffer;
 pub use payload::Heartbeats;
 
 #[derive(thiserror::Error, Debug)]

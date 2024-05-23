@@ -13,7 +13,23 @@ services:
       POSTGRES_PASSWORD: postgres
     volumes:
       - ./.volume/postgresql:/var/lib/postgresql/data/
-
+  rabbitmq:
+    image: rabbitmq:management
+    ports:
+        - 5672:5672
+        - 15672:15672
+    volumes:
+        - ~/.volume/rabbitmq/data/:/var/lib/rabbitmq/
+        - ~/.volume/rabbitmq/log/:/var/log/rabbitmq
+  etl:
+    build: .
+    context: ./etl
+    restart: unless-stopped
+    volumes:
+      - ./etl/:/usr/etl/
+    depends_on:
+      - db
+      - rabbitmq
   # backend:
   #   build: .
   #   profiles: [production]
