@@ -1,35 +1,45 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, status
 
+from api.security import required_login
+from schemas import DetailSchema
 from schemas.setting import CreateSettingRequest, Setting, UpdateSettingRequest
 from service.setting import SettingService
 
 # from auth.action import get_current_user
 from .services import get_setting_service
 
-router = APIRouter(prefix="/settings", tags=["users"])
+router = APIRouter(prefix="/settings", tags=["settings"])
 
 
 @router.post("/update")
 def update_setting(
     new_setting: UpdateSettingRequest,
     setting_service: SettingService = Depends(get_setting_service),
-    user_id: str = Query(...),
+    auth_user_id: str = Depends(required_login),
 ):
-    return setting_service.update_setting(user_id, new_setting.rev, new_setting.raw)
+    return setting_service.update_setting(
+        auth_user_id, new_setting.rev, new_setting.raw
+    )
 
 
 @router.post("/create")
 def create_setting(
     setting: CreateSettingRequest,
     setting_service: SettingService = Depends(get_setting_service),
-    user_id: str = Query(...),
+    auth_user_id: str = Depends(required_login),
 ):
-    return setting_service.create_setting(user_id, setting.raw)
+    return setting_service.create_setting(auth_user_id, setting.raw)
 
 
-@router.get("", response_model=Setting)
+@router.get(
+    "",
+    responses={
+        status.HTTP_200_OK: {"model": Setting},
+        status.HTTP_404_NOT_FOUND: {"model": DetailSchema},
+    },
+)
 def get_setting(
     setting_service: SettingService = Depends(get_setting_service),
-    user_id: str = Query(...),
+    auth_user_id: str = Depends(required_login),
 ):
-    return setting_service.get_by_user(user_id)
+    return setting_service.get_by_user(auth_user_id)

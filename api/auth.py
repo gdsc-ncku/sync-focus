@@ -1,49 +1,51 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 
 # from service.utils import create_access_token, create_refresh_token
-from bootstrap.setting import setting
+from api.services import get_user_service
+from schemas.token import Token
+from schemas.user import UserLoginRequest
+from service.user import UserService
 
-settings = setting
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-# @router.post("/login", response_model=Token)
-# async def login(
-#     response: Response,
-#     form_data: OAuth2PasswordRequestForm = Depends(),
-#     user_service: UserService = Depends(get_user_service),
-# ):
-#     user = user_service.get_user_by_username(username=form_data.username)
-#     if not user or user.password != form_data.password:
-#         raise HTTPException(
-#             status_code=status.HTTP_401_UNAUTHORIZED,
-#             detail="Incorrect username or password",
-#             headers={"WWW-Authenticate": "Bearer"},
-#         )
+@router.post("/login", response_model=Token)
+def login(
+    response: Response,
+    form_data: UserLoginRequest,
+    user_service: UserService = Depends(get_user_service),
+):
+    user = user_service.get_user_by_username(username=form_data.username)
+    if not user or user.password != form_data.password:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
-#     access_token = await create_access_token(data={"user_id": form_data})
-#     refresh_token = await create_refresh_token(data={"user_id": form_data.username})
+    access_token = user_service.create_access_token(data={"user_id": str(user.id)})
+    refresh_token = user_service.create_refresh_token(data={"user_id": str(user.id)})
 
-#     # await db.update_user_login(username=form_data.username)
-#     expired_time = (
-#         int(datetime.now(tz=timezone.utc).timestamp() * 1000)
-#         + timedelta(minutes=settings.access_token.expire_minutes).seconds * 1000
-#     )
+    response.set_cookie(
+        "access_token",
+        access_token,
+        httponly=True,
+        samesite="strict",
+        secure=False,
+    )
 
-#     response.set_cookie(
-#         "refresh_token",
-#         refresh_token,
-#         httponly=True,
-#         samesite="strict",
-#         secure=False,
-#         expires=timedelta(settings.refresh_token.expire_minutes),
-#     )
+    response.set_cookie(
+        "refresh_token",
+        refresh_token,
+        httponly=True,
+        samesite="strict",
+        secure=False,
+    )
 
-#     return Token(
-#         access_token=access_token,
-#         expires_in=expired_time,
-#         token_type="Bearer",
-#     )
+    return Token(
+        access_token=access_token,
+        token_type="Bearer",
+    )
 
 
 # @router.post("/refresh", response_model=Token)
