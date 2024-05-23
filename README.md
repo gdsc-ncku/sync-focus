@@ -199,7 +199,7 @@ demo 範例
 ```bash
 poetry install
 poetry shell
-cp .env.example .env
+cp .example.env .env
 docker compose up -d
 make revision MESSAGE=init
 make migrate
