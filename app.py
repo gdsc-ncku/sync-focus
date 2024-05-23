@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
-from api import auth, heartbeat, user,setting
+from api import auth, heartbeat, setting, user
 from otp import trace, tracer
 
 app = FastAPI()
@@ -14,7 +14,7 @@ app.include_router(setting.router, prefix="/api")
 # app.include_router(me.router, prefix="/api")
 
 origins = [
-    "http://localhost:5173",
+    "*",
 ]
 
 methods = [

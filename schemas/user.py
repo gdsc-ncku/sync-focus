@@ -20,6 +20,12 @@ class CreateUserRequest(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
+class UserLoginRequest(BaseModel):
+    username: Optional[str]
+    password: str
+
+
 class Birthday(BaseModel):
     birthday: date
 

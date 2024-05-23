@@ -1,22 +1,42 @@
 import hashlib
+import json
+from datetime import datetime, timedelta
 from typing import List
+from uuid import UUID
 
+from jose import jwt
 from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session
 
 import models
 import schemas
+from bootstrap.setting import Settings
 from service.utils import get_password_hash
+
+
+class UUIDEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, UUID):
+            # if the obj is uuid, we simply return the value of uuid
+            return obj.hex
+        return json.JSONEncoder.default(self, obj)
 
 
 class UserService:
     db_session = None
 
-    def __init__(self, db_session: Session = None):
+    def __init__(self, db_session: Session, setting: Settings):
         self.db_session = db_session
+        self.setting = setting
 
     def get_user_by_username(self, username: str):
         stmt = select(models.User).where(models.User.username == username)
+        result = self.db_session.execute(stmt)
+        user = result.scalars().first()
+        return user
+
+    def get_user_by_id(self, user_id: str):
+        stmt = select(models.User).where(models.User.id == user_id)
         result = self.db_session.execute(stmt)
         user = result.scalars().first()
         return user
@@ -49,3 +69,37 @@ class UserService:
 
     def get_password_hash(password: str):
         return hashlib.sha256(password).hexdigest()
+
+    def get_user_by_api_key(self, api_key: str):
+        stmt = select(models.User).where(models.User.api_key == api_key)
+        result = self.db_session.execute(stmt)
+        user = result.scalars().first()
+        return user
+
+    def create_access_token(self, data: dict):
+        to_encode = data.copy()
+        expire = datetime.utcnow() + timedelta(
+            minutes=self.setting.access_token.expire_minutes
+        )
+
+        to_encode.update({"exp": expire})
+        encoded_jwt = jwt.encode(
+            claims=to_encode,
+            key=self.setting.access_token.secret,
+            algorithm="HS256",
+        )
+        return encoded_jwt
+
+    def create_refresh_token(self, data: dict):
+        to_encode = data.copy()
+        expire = datetime.utcnow() + timedelta(
+            minutes=self.setting.refresh_token.expire_minutes
+        )
+
+        to_encode.update({"exp": expire})
+        encoded_jwt = jwt.encode(
+            to_encode,
+            self.setting.refresh_token.secret,
+            algorithm="HS256",
+        )
+        return encoded_jwt

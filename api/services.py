@@ -2,6 +2,7 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from bootstrap.deps import deps
+from bootstrap.setting import setting
 from service.duration import DurationService
 from service.heartbeat import HeartbeatService
 from service.setting import SettingService
@@ -18,7 +19,7 @@ def get_duration_service(db: Session = Depends(deps.get_db)) -> DurationService:
 
 
 def get_user_service(db: Session = Depends(deps.get_db)) -> UserService:
-    return UserService(db)
+    return UserService(db, setting=setting)
 
 
 def get_setting_service(db: Session = Depends(deps.get_db)) -> SettingService:
@@ -27,3 +28,4 @@ def get_setting_service(db: Session = Depends(deps.get_db)) -> SettingService:
 
 def get_summary_service(db: Session = Depends(deps.get_db)) -> SummaryService:
     return SummaryService(db)
+

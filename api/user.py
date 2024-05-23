@@ -2,6 +2,7 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
+from api.security import required_login
 from schemas.user import CreateUserRequest, User
 from service.user import UserService
 
@@ -14,6 +15,14 @@ router = APIRouter(prefix="/users", tags=["users"])
 @router.get("", response_model=List[User])
 def get_users(user_service: UserService = Depends(get_user_service)):
     return user_service.get_users()
+
+
+@router.get("/profile", response_model=User)
+def get_user_profile(
+    user_service: UserService = Depends(get_user_service),
+    auth_user_id: str = Depends(required_login),
+):
+    return user_service.get_user_by_id(auth_user_id)
 
 
 @router.post("")
