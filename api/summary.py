@@ -3,32 +3,31 @@ from fastapi import APIRouter, Depends, Query
 from api.services import get_summary_service
 from schemas.summary import ListAgentRequest, ListDomainRequest, ListPathRequest
 from service.summary import SummaryService
-from service.user import UserService
 
-router = APIRouter(prefix="/settings", tags=["users"])
+router = APIRouter(prefix="/summary", tags=["summary"])
 
 
-@router.post("/domain")
+@router.get("/domain")
 def list_domain(
-    request: ListDomainRequest,
+    request: ListDomainRequest = Depends(),
     summary_service: SummaryService = Depends(get_summary_service),
     user_id: str = Query(...),
 ):
     return summary_service.list_domain(user_id, request.offset, request.limit)
 
 
-@router.post("/path")
+@router.get("/path")
 def get_path_usage(
-    request: ListPathRequest,
+    request: ListPathRequest = Depends(),
     summary_service: SummaryService = Depends(get_summary_service),
     user_id: str = Query(...),
 ):
     return summary_service.get_path(user_id, request.domain)
 
 
-@router.post("/agent")
+@router.get("/agent")
 def get_agent_usage(
-    request: ListAgentRequest,
+    request: ListAgentRequest = Depends(),
     summary_service: SummaryService = Depends(get_summary_service),
     user_id: str = Query(...),
 ):

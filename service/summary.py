@@ -28,7 +28,7 @@ class SummaryService:
     def get_path(self, user_id: str, domain: str) -> list[dict]:
         # duplicated code
         summary_subquery = (
-            self.db_session.query([Summary.id, Summary.user_id])
+            self.db_session.query(Summary.id, Summary.user_id)
             .filter(Summary.user_id == user_id)
             .join(SummaryItem, Summary.id == SummaryItem.summary_id)
             .filter(SummaryItem.key == domain, SummaryItem.type == 0)
@@ -45,7 +45,7 @@ class SummaryService:
     def get_agent(self, user_id: str, domain: str) -> list[dict]:
         # duplicated code
         summary_subquery = (
-            self.db_session.query([Summary.id, Summary.user_id])
+            self.db_session.query(Summary.id, Summary.user_id)
             .filter(Summary.user_id == user_id)
             .join(SummaryItem, Summary.id == SummaryItem.summary_id)
             .filter(SummaryItem.key == domain, SummaryItem.type == 0)
