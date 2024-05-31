@@ -12,7 +12,7 @@ router = APIRouter(prefix="/heartbeats", tags=["heartbeats"])
 
 
 @router.post(
-    "/",
+    "",
     description="Receive a heartbeat from the client(browser extension)",
     responses={
         status.HTTP_201_CREATED: {"model": Heartbeat},

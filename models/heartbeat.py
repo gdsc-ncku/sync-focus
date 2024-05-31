@@ -9,12 +9,12 @@ from .base import Base
 
 class Heartbeat(Base):
     __tablename__ = "heartbeats"
-    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4())
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     # user_id: Mapped[str] = mapped_column(ForeignKey(User.id), unique=True)
     user_id: Mapped[str] = mapped_column(index=True)
-    entity: Mapped[str] = mapped_column(index=True)
-    type: Mapped[str] = mapped_column(index=True)
-    category: Mapped[str] = mapped_column(index=True)
+    entity: Mapped[str] = mapped_column(index=True, nullable=True)
+    type: Mapped[str] = mapped_column(index=True, nullable=True)
+    category: Mapped[str] = mapped_column(index=True, nullable=True)
     browser: Mapped[str] = mapped_column(index=True)
 
     domain: Mapped[str] = mapped_column(index=True)  # page domain
