@@ -15,3 +15,6 @@ dev:
 
 setup-database:
 	sudo docker compose --profile backend-dev up
+
+clear-revision:
+	rm -rf alembic/versions/*
