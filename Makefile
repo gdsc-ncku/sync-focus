@@ -18,3 +18,6 @@ setup-database:
 
 clear-revision:
 	rm -rf alembic/versions/*
+
+clear-db: clear-revision
+	rm -rf .volume/*
